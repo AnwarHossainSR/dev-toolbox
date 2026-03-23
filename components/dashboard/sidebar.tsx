@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 const TOOL_ICONS: Record<string, React.ElementType> = {
   "JSON Formatter": Braces,
@@ -69,15 +69,11 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export function Sidebar({ plan = "free" }: { plan?: Plan }) {
   const pathname = usePathname();
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    developer: true,
-    text: true,
-    utility: true,
-  });
+  const [expandedCategory, setExpandedCategory] = useState<string>("developer");
   const [isPending, startTransition] = useTransition();
 
   const toggleCategory = (category: string) => {
-    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }));
+    setExpandedCategory((prev) => (prev === category ? "" : category));
   };
 
   const categorizedTools = TOOL_CATEGORIES.reduce(
@@ -94,8 +90,21 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
     });
   };
 
+  useEffect(() => {
+    const activeCategory = TOOLS.find(
+      (tool) => pathname === tool.href || pathname.startsWith(tool.href + "/"),
+    )?.category;
+
+    if (activeCategory) {
+      setExpandedCategory(activeCategory);
+    }
+  }, [pathname]);
+
+  const freeCount = TOOLS.filter((tool) => !tool.isPremium).length;
+  const proCount = TOOLS.filter((tool) => tool.isPremium).length;
+
   return (
-    <aside className="flex h-full w-64 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full w-72 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       {/* Logo */}
       <div className="h-16 shrink-0 border-b border-sidebar-border px-4">
         <div className="flex h-full items-center gap-3">
@@ -136,9 +145,17 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Tools
           </p>
-          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            {TOOLS.length}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              {TOOLS.length}
+            </span>
+            <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-400">
+              {freeCount} free
+            </span>
+            <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-400">
+              {proCount} pro
+            </span>
+          </div>
         </div>
       </div>
 
@@ -146,7 +163,7 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
       <div className="flex-1 overflow-y-auto scrollbar-thin px-3 pb-2">
         <nav className="space-y-0.5">
           {TOOL_CATEGORIES.map((category) => {
-            const isExpanded = expanded[category];
+            const isExpanded = expandedCategory === category;
             const CategoryIcon = CATEGORY_ICONS[category];
             const tools = categorizedTools[category];
 
@@ -154,7 +171,12 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
               <div key={category}>
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="group mt-1 flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className={cn(
+                    "group mt-1 flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors",
+                    isExpanded
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
                 >
                   <div className="flex items-center gap-2">
                     <CategoryIcon className="h-3.5 w-3.5" />
@@ -184,7 +206,7 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
                           key={tool.name}
                           href={tool.href}
                           className={cn(
-                            "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                            "group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
                             isActive
                               ? "bg-amber-500/15 font-medium text-amber-700 dark:text-amber-400"
                               : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -192,7 +214,7 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
                         >
                           <span
                             className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border",
+                              "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border",
                               isActive
                                 ? "border-amber-500/40 bg-amber-500/15"
                                 : "border-border bg-background group-hover:bg-card",
@@ -200,7 +222,7 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
                           >
                             <Icon
                               className={cn(
-                                "h-3.5 w-3.5 transition-colors",
+                                "h-3 w-3 transition-colors",
                                 isActive
                                   ? "text-amber-700 dark:text-amber-400"
                                   : "text-muted-foreground group-hover:text-foreground",
