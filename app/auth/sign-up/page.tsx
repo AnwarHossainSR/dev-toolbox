@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { AlertCircle, Check, Loader2, X } from "lucide-react";
+import { AlertCircle, Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -98,6 +98,8 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -172,16 +174,30 @@ export default function SignUpPage() {
             <Label htmlFor="password" className="text-white">
               Password
             </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             {password && <PasswordStrength password={password} />}
           </div>
 
@@ -192,23 +208,34 @@ export default function SignUpPage() {
             <div className="relative">
               <Input
                 id="repeat-password"
-                type="password"
+                type={showRepeatPassword ? "text" : "password"}
                 placeholder="••••••••"
                 required
                 value={repeatPassword}
                 onChange={(e) => setRepeatPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500"
+                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500 pr-20"
               />
-              {repeatPassword && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {passwordsMatch ? (
-                    <Check className="h-5 w-5 text-green-400" />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRepeatPassword((v) => !v)}
+                  className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showRepeatPassword ? (
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <X className="h-5 w-5 text-red-400" />
+                    <Eye className="h-4 w-4" />
                   )}
-                </div>
-              )}
+                </button>
+                {repeatPassword &&
+                  (passwordsMatch ? (
+                    <Check className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-400" />
+                  ))}
+              </div>
             </div>
           </div>
 
