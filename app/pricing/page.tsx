@@ -79,23 +79,23 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <PublicNavbar />
 
       {/* Hero */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             Simple, Transparent Pricing
           </h1>
-          <p className="max-w-2xl mx-auto text-xl text-zinc-400">
+          <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
             Start free, upgrade when you need to
           </p>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {plans.map((plan) => (
@@ -103,17 +103,17 @@ export default function PricingPage() {
                 key={plan.name}
                 className={`relative border-2 p-8 transition-all ${
                   plan.popular
-                    ? "border-amber-500 bg-gradient-to-br from-amber-500/5 to-yellow-500/5"
-                    : "border-zinc-800 bg-zinc-950"
+                    ? "border-amber-500 bg-linear-to-br from-amber-500/5 to-yellow-500/5"
+                    : "border-border bg-card"
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-1 rounded-full text-sm font-semibold text-black">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-linear-to-r from-amber-500 to-yellow-500 px-4 py-1 rounded-full text-sm font-semibold text-black">
                     Most Popular
                   </div>
                 )}
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-zinc-400 mb-6">{plan.description}</p>
+                <p className="text-muted-foreground mb-6">{plan.description}</p>
                 <div className="mb-8">
                   <p className="text-4xl font-bold mb-2">{plan.price}</p>
                   {plan.price === "Coming Soon" && (
@@ -122,29 +122,38 @@ export default function PricingPage() {
                     </p>
                   )}
                 </div>
-                <Button
-                  className={`w-full mb-8 h-11 font-semibold ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600"
-                      : "border-zinc-700 text-white hover:bg-zinc-900"
-                  }`}
-                  variant={plan.popular ? "default" : "outline"}
-                  asChild={plan.name === "Free"}
-                >
-                  {plan.name === "Free" ? (
+                {plan.name === "Free" ? (
+                  <Button
+                    className={`w-full mb-8 h-11 font-semibold ${
+                      plan.popular
+                        ? "bg-linear-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600"
+                        : "border-border text-foreground hover:bg-muted"
+                    }`}
+                    variant={plan.popular ? "default" : "outline"}
+                    asChild
+                  >
                     <Link href="/auth/sign-up">Get Started Free</Link>
-                  ) : (
-                    <button disabled={plan.price === "Coming Soon"}>
-                      {plan.price === "Coming Soon"
-                        ? "Coming Soon"
-                        : "Contact Sales"}
-                    </button>
-                  )}
-                </Button>
+                  </Button>
+                ) : (
+                  <Button
+                    className={`w-full mb-8 h-11 font-semibold ${
+                      plan.popular
+                        ? "bg-linear-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600"
+                        : "border-border text-foreground hover:bg-muted"
+                    }`}
+                    variant={plan.popular ? "default" : "outline"}
+                    disabled={plan.price === "Coming Soon"}
+                    type="button"
+                  >
+                    {plan.price === "Coming Soon"
+                      ? "Coming Soon"
+                      : "Contact Sales"}
+                  </Button>
+                )}
                 <div className="space-y-4">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex gap-3">
-                      <Check className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <Check className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                       <span className="text-sm">{feature}</span>
                     </div>
                   ))}
@@ -156,16 +165,16 @@ export default function PricingPage() {
       </section>
 
       {/* FAQs */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold mb-12 text-center">
             Frequently Asked Questions
           </h2>
           <div className="space-y-6">
             {faqs.map((faq) => (
-              <Card key={faq.q} className="border-zinc-800 bg-zinc-950 p-8">
+              <Card key={faq.q} className="border-border bg-card p-8">
                 <h3 className="text-lg font-semibold mb-4">{faq.q}</h3>
-                <p className="text-zinc-400">{faq.a}</p>
+                <p className="text-muted-foreground">{faq.a}</p>
               </Card>
             ))}
           </div>
@@ -173,14 +182,14 @@ export default function PricingPage() {
       </section>
 
       {/* CTA */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-zinc-400 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             Create a free account and start using Dev Toolbox today
           </p>
           <Button
-            className="h-12 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-lg hover:from-amber-600 hover:to-yellow-600"
+            className="h-12 bg-linear-to-r from-amber-500 to-yellow-500 text-black text-lg hover:from-amber-600 hover:to-yellow-600"
             asChild
           >
             <Link href="/auth/sign-up">Get Started Free</Link>

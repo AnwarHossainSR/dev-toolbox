@@ -116,11 +116,11 @@ const categories = [
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <PublicNavbar />
 
       {/* Hero */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             Powerful Tools for
@@ -128,7 +128,7 @@ export default function FeaturesPage() {
               Every Developer
             </span>
           </h1>
-          <p className="max-w-2xl mx-auto text-xl text-zinc-400">
+          <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
             Our comprehensive suite includes 14+ tools designed to streamline
             your development workflow
           </p>
@@ -136,7 +136,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Categories */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold mb-16 text-center">
             Tool Categories
@@ -147,13 +147,13 @@ export default function FeaturesPage() {
               return (
                 <Card
                   key={category.name}
-                  className="border-zinc-800 bg-zinc-950 p-8 hover:border-amber-500/30 transition-colors text-center"
+                  className="border-border bg-card p-8 hover:border-amber-500/30 transition-colors text-center"
                 >
                   <Icon className="h-12 w-12 text-amber-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     {category.description}
                   </p>
                 </Card>
@@ -164,7 +164,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* All Features */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold mb-16 text-center">All Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -173,13 +173,15 @@ export default function FeaturesPage() {
               return (
                 <Card
                   key={feature.title}
-                  className="border-zinc-800 bg-zinc-950 p-6 hover:border-amber-500/30 transition-colors"
+                  className="border-border bg-card p-6 hover:border-amber-500/30 transition-colors"
                 >
                   <Icon className="h-8 w-8 text-amber-400 mb-4" />
                   <h3 className="text-lg font-semibold mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-zinc-400">{feature.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {feature.description}
+                  </p>
                 </Card>
               );
             })}
@@ -188,7 +190,7 @@ export default function FeaturesPage() {
       </section>
 
       {/* Key Benefits */}
-      <section className="border-b border-zinc-800 py-20 md:py-32">
+      <section className="border-b border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold mb-16 text-center">
             Why Dev Toolbox?
@@ -230,12 +232,12 @@ export default function FeaturesPage() {
               return (
                 <div
                   key={item.title}
-                  className="flex gap-4 p-6 rounded-lg border border-zinc-800 bg-zinc-950"
+                  className="flex gap-4 p-6 rounded-lg border border-border bg-card"
                 >
                   <Icon className="h-6 w-6 text-amber-400 flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm text-zinc-400">{item.desc}</p>
+                    <p className="text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                 </div>
               );

@@ -1,6 +1,7 @@
 import { CommandPalette } from "@/components/dashboard/command-palette";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Sidebar } from "@/components/dashboard/sidebar";
+import { getUserPlan } from "@/lib/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -23,10 +24,12 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
+  const plan = await getUserPlan();
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <CommandPalette />
-      <Sidebar />
+      <Sidebar plan={plan} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto">{children}</main>

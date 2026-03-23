@@ -5,7 +5,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-zinc-800 bg-black">
+    <footer className="border-t border-border bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* Brand */}
@@ -16,7 +16,7 @@ export default function Footer() {
               </div>
               <span className="text-lg font-bold">Dev Toolbox</span>
             </Link>
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               Essential tools for developers, all in one place.
             </p>
           </div>
@@ -24,11 +24,11 @@ export default function Footer() {
           {/* Links */}
           <div>
             <h3 className="mb-4 text-sm font-semibold">Product</h3>
-            <ul className="space-y-2 text-sm text-zinc-400">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
                   href="/features"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Features
                 </Link>
@@ -36,7 +36,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/pricing"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Pricing
                 </Link>
@@ -44,7 +44,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   About
                 </Link>
@@ -55,11 +55,11 @@ export default function Footer() {
           {/* Company */}
           <div>
             <h3 className="mb-4 text-sm font-semibold">Company</h3>
-            <ul className="space-y-2 text-sm text-zinc-400">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
                   href="/blog"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Blog
                 </Link>
@@ -67,7 +67,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/docs"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Documentation
                 </Link>
@@ -75,7 +75,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Contact
                 </Link>
@@ -86,11 +86,11 @@ export default function Footer() {
           {/* Legal */}
           <div>
             <h3 className="mb-4 text-sm font-semibold">Legal</h3>
-            <ul className="space-y-2 text-sm text-zinc-400">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link
                   href="/privacy"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -98,7 +98,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   Terms of Service
                 </Link>
@@ -107,8 +107,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-zinc-800 pt-8">
-          <p className="text-center text-sm text-zinc-500">
+        <div className="mt-8 border-t border-border pt-8">
+          <p className="text-center text-sm text-muted-foreground">
             © {currentYear} Dev Toolbox. All rights reserved.
           </p>
         </div>

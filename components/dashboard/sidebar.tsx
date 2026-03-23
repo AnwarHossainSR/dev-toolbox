@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "@/lib/auth-actions";
+import { type Plan } from "@/lib/subscription";
 import { TOOL_CATEGORIES, TOOLS } from "@/lib/tools";
 import { cn } from "@/lib/utils";
 import {
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Clock,
   Code2,
+  Crown,
   Database,
   FileText,
   Fingerprint,
@@ -65,7 +67,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   utility: "Utility",
 };
 
-export function Sidebar() {
+export function Sidebar({ plan = "free" }: { plan?: Plan }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     developer: true,
@@ -206,7 +208,13 @@ export function Sidebar() {
                             />
                           </span>
                           <span className="truncate">{tool.name}</span>
-                          {isActive && (
+                          {tool.isPremium && plan !== "pro" && (
+                            <Crown className="ml-auto h-3 w-3 shrink-0 text-amber-500" />
+                          )}
+                          {isActive && !tool.isPremium && (
+                            <ChevronRight className="ml-auto h-3 w-3 shrink-0 text-amber-700/70 dark:text-amber-400/70" />
+                          )}
+                          {isActive && tool.isPremium && plan === "pro" && (
                             <ChevronRight className="ml-auto h-3 w-3 shrink-0 text-amber-700/70 dark:text-amber-400/70" />
                           )}
                         </Link>
@@ -222,10 +230,23 @@ export function Sidebar() {
 
       {/* User section */}
       <div className="shrink-0 border-t border-sidebar-border p-3">
-        <div className="mb-2 flex items-center gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>All tools are ready</span>
-        </div>
+        {plan === "free" ? (
+          <div className="mb-2 flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 ring-1 ring-amber-500/20 dark:text-amber-400">
+            <Crown className="h-3.5 w-3.5 shrink-0" />
+            <span className="font-medium">9 tools locked</span>
+            <Link
+              href="/pricing"
+              className="ml-auto font-semibold underline underline-offset-2 hover:no-underline"
+            >
+              Upgrade
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-2 flex items-center gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>All tools unlocked</span>
+          </div>
+        )}
         <button
           onClick={handleSignOut}
           disabled={isPending}

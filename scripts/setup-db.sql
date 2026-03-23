@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   email TEXT,
   full_name TEXT,
   avatar_url TEXT,
+  plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -101,3 +102,10 @@ CREATE POLICY "Users can insert their own favorites"
 CREATE POLICY "Users can delete their own favorites"
   ON favorites FOR DELETE
   USING (auth.uid() = user_id);
+
+-- ============================================================
+-- Migration: add plan column for existing databases
+-- Run this if profiles table already exists without the plan column
+-- ============================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro'));
+

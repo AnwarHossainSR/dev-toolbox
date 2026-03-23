@@ -60,7 +60,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <PublicNavbar />
 
       {/* Hero Section */}
@@ -82,7 +82,7 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-2xl text-xl text-zinc-400">
+          <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
             A comprehensive suite of free, open-source tools for developers.
             Format JSON, generate hashes, convert colors, test regex, and much
             more—all in one elegant interface.
@@ -99,7 +99,7 @@ export default function Home() {
             </Button>
             <Button
               variant="outline"
-              className="h-12 border-zinc-700 text-white hover:bg-zinc-900"
+              className="h-12 border-border text-foreground hover:bg-muted"
               asChild
             >
               <Link href="/features">Explore Tools</Link>
@@ -107,31 +107,37 @@ export default function Home() {
           </div>
 
           {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 pt-12 border-t border-zinc-800">
+          <div className="mt-16 grid grid-cols-3 gap-8 pt-12 border-t border-border">
             <div>
               <div className="text-3xl font-bold text-amber-400">14+</div>
-              <div className="text-sm text-zinc-400">Developer Tools</div>
+              <div className="text-sm text-muted-foreground">
+                Developer Tools
+              </div>
             </div>
             <div>
               <div className="text-3xl font-bold text-amber-400">100%</div>
-              <div className="text-sm text-zinc-400">Free & Open Source</div>
+              <div className="text-sm text-muted-foreground">
+                Free & Open Source
+              </div>
             </div>
             <div>
               <div className="text-3xl font-bold text-amber-400">Fast</div>
-              <div className="text-sm text-zinc-400">Instant Results</div>
+              <div className="text-sm text-muted-foreground">
+                Instant Results
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="border-t border-zinc-800 py-20 md:py-32">
+      <section className="border-t border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold md:text-5xl mb-4">
               Why Choose Dev Toolbox?
             </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               We provide everything you need to streamline your development
               workflow
             </p>
@@ -143,13 +149,15 @@ export default function Home() {
               return (
                 <Card
                   key={feature.title}
-                  className="border-zinc-800 bg-zinc-950 p-6 hover:border-amber-500/30 transition-colors"
+                  className="border-border bg-card p-6 hover:border-amber-500/30 transition-colors"
                 >
                   <Icon className="h-8 w-8 text-amber-400 mb-4" />
                   <h3 className="text-lg font-semibold mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-zinc-400">{feature.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {feature.description}
+                  </p>
                 </Card>
               );
             })}
@@ -158,11 +166,11 @@ export default function Home() {
       </section>
 
       {/* Tools Grid */}
-      <section className="border-t border-zinc-800 py-20 md:py-32">
+      <section className="border-t border-border py-20 md:py-32">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold md:text-5xl mb-4">Our Tools</h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               A wide range of tools to help with every aspect of development
             </p>
           </div>
@@ -171,7 +179,7 @@ export default function Home() {
             {tools.map((tool) => (
               <div
                 key={tool}
-                className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4 text-center hover:border-amber-500/30 hover:bg-zinc-900 transition-all"
+                className="rounded-lg border border-border bg-card/50 p-4 text-center hover:border-amber-500/30 hover:bg-muted transition-all"
               >
                 <p className="text-sm font-medium">{tool}</p>
               </div>
@@ -181,12 +189,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t border-zinc-800 py-20 md:py-32">
+      <section className="border-t border-border py-20 md:py-32">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold md:text-5xl mb-6">
             Ready to Get Started?
           </h2>
-          <p className="text-zinc-400 mb-8 text-lg">
+          <p className="text-muted-foreground mb-8 text-lg">
             Join thousands of developers who are already using Dev Toolbox to
             streamline their work.
           </p>

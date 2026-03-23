@@ -42,14 +42,16 @@ export default function LoginPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Welcome Back</h1>
-        <p className="text-zinc-400">Sign in to access your Dev Toolbox</p>
+        <p className="text-muted-foreground">
+          Sign in to access your Dev Toolbox
+        </p>
       </div>
 
-      <Card className="border-zinc-800 bg-zinc-950">
+      <Card className="border-border bg-card">
         <CardContent className="pt-6">
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">
+              <Label htmlFor="email" className="text-foreground">
                 Email
               </Label>
               <Input
@@ -60,13 +62,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500"
+                className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-white">
+                <Label htmlFor="password" className="text-foreground">
                   Password
                 </Label>
                 <Link
@@ -85,12 +87,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500 pr-10"
+                  className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -129,7 +131,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-zinc-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-zinc-950 px-2 text-zinc-400">
+                <span className="bg-card px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
@@ -138,7 +140,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-zinc-700 hover:bg-zinc-900"
+              className="w-full border-input hover:bg-muted"
             >
               GitHub
             </Button>
@@ -146,7 +148,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
 
-      <p className="text-center text-sm text-zinc-400">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link
           href="/auth/sign-up"

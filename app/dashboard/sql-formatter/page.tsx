@@ -1,5 +1,6 @@
 "use client";
 
+import { PremiumGate } from "@/components/tools/premium-gate";
 import { SqlFormatter } from "@/components/tools/sql-formatter";
 import { ToolLayout } from "@/components/tools/tool-layout";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
@@ -12,7 +13,9 @@ export default function SqlFormatterPage() {
       title="SQL Formatter"
       description="Format and beautify SQL queries for better readability"
     >
-      <SqlFormatter />
+      <PremiumGate>
+        <SqlFormatter />
+      </PremiumGate>
     </ToolLayout>
   );
 }

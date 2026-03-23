@@ -1,17 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Zap } from "lucide-react";
+import { Moon, Sun, Zap } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function PublicNavbar() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-zinc-800 bg-black/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -27,11 +29,11 @@ export default function PublicNavbar() {
           {/* Navigation Links */}
           <div className="hidden items-center gap-8 md:flex">
             <Link
-              href="/'features"
+              href="/features"
               className={`text-sm transition-colors ${
                 isActive("/features")
                   ? "text-amber-400"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Features
@@ -41,7 +43,7 @@ export default function PublicNavbar() {
               className={`text-sm transition-colors ${
                 isActive("/about")
                   ? "text-amber-400"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               About
@@ -51,18 +53,30 @@ export default function PublicNavbar() {
               className={`text-sm transition-colors ${
                 isActive("/pricing")
                   ? "text-amber-400"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Pricing
             </Link>
           </div>
 
-          {/* Auth Buttons */}
-          <div className="flex items-center gap-4">
+          {/* Auth Buttons + Theme Toggle */}
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              className="text-zinc-300 hover:text-white hover:bg-zinc-800"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
               asChild
             >
               <Link href="/auth/login">Sign In</Link>

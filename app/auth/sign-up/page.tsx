@@ -39,7 +39,7 @@ function PasswordStrength({ password }: { password: string }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className="flex-1 h-1 bg-zinc-700 rounded-full overflow-hidden">
+        <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full transition-all ${
               strength.score === 1
@@ -56,12 +56,12 @@ function PasswordStrength({ password }: { password: string }) {
           {strength.label}
         </span>
       </div>
-      <ul className="space-y-1 text-xs text-zinc-400">
+      <ul className="space-y-1 text-xs text-muted-foreground">
         <li className="flex items-center gap-2">
           {password.length >= 8 ? (
             <Check className="h-3 w-3 text-green-400" />
           ) : (
-            <X className="h-3 w-3 text-zinc-600" />
+            <X className="h-3 w-3 text-muted-foreground" />
           )}
           At least 8 characters
         </li>
@@ -69,7 +69,7 @@ function PasswordStrength({ password }: { password: string }) {
           {/[A-Z]/.test(password) && /[a-z]/.test(password) ? (
             <Check className="h-3 w-3 text-green-400" />
           ) : (
-            <X className="h-3 w-3 text-zinc-600" />
+            <X className="h-3 w-3 text-muted-foreground" />
           )}
           Mix of uppercase and lowercase
         </li>
@@ -77,7 +77,7 @@ function PasswordStrength({ password }: { password: string }) {
           {/\d/.test(password) ? (
             <Check className="h-3 w-3 text-green-400" />
           ) : (
-            <X className="h-3 w-3 text-zinc-600" />
+            <X className="h-3 w-3 text-muted-foreground" />
           )}
           Includes a number
         </li>
@@ -85,7 +85,7 @@ function PasswordStrength({ password }: { password: string }) {
           {/[^A-Za-z0-9]/.test(password) ? (
             <Check className="h-3 w-3 text-green-400" />
           ) : (
-            <X className="h-3 w-3 text-zinc-600" />
+            <X className="h-3 w-3 text-muted-foreground" />
           )}
           Includes a special character
         </li>
@@ -147,15 +147,15 @@ export default function SignUpPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Create Account</h1>
-        <p className="text-zinc-400">
+        <p className="text-muted-foreground">
           Join Dev Toolbox and start using powerful tools
         </p>
       </div>
 
-      <div className="bg-zinc-950 rounded-lg border border-zinc-800 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <form onSubmit={handleSignUp} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">
+            <Label htmlFor="email" className="text-foreground">
               Email
             </Label>
             <Input
@@ -166,12 +166,12 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
-              className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500"
+              className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500"
             />
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="password" className="text-white">
+            <Label htmlFor="password" className="text-foreground">
               Password
             </Label>
             <div className="relative">
@@ -183,12 +183,12 @@ export default function SignUpPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500 pr-10"
+                className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -202,7 +202,7 @@ export default function SignUpPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="repeat-password" className="text-white">
+            <Label htmlFor="repeat-password" className="text-foreground">
               Confirm Password
             </Label>
             <div className="relative">
@@ -214,13 +214,13 @@ export default function SignUpPage() {
                 value={repeatPassword}
                 onChange={(e) => setRepeatPassword(e.target.value)}
                 disabled={isLoading}
-                className="border-zinc-700 bg-zinc-900 placeholder:text-zinc-500 focus:border-amber-500 pr-20"
+                className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500 pr-20"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowRepeatPassword((v) => !v)}
-                  className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
                   {showRepeatPassword ? (
@@ -266,7 +266,7 @@ export default function SignUpPage() {
               <div className="w-full border-t border-zinc-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-zinc-950 px-2 text-zinc-400">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -275,14 +275,14 @@ export default function SignUpPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full border-zinc-700 hover:bg-zinc-900"
+            className="w-full border-input hover:bg-muted"
           >
             GitHub
           </Button>
         </form>
       </div>
 
-      <p className="text-center text-sm text-zinc-400">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
           href="/auth/login"

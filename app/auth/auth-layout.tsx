@@ -7,9 +7,9 @@ export default function AuthLayoutContent({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-black text-white">
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background text-foreground">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex flex-col justify-between p-8 bg-gradient-to-br from-amber-950 via-black to-black border-r border-zinc-800">
+      <div className="hidden lg:flex flex-col justify-between p-8 bg-gradient-to-br from-amber-50 dark:from-amber-950 via-background to-background border-r border-border">
         <div>
           <Link href="/" className="flex items-center gap-3 mb-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-yellow-500">
@@ -22,7 +22,7 @@ export default function AuthLayoutContent({
               <h2 className="text-3xl font-bold mb-4">
                 Your Developer Toolkit
               </h2>
-              <p className="text-zinc-400">
+              <p className="text-muted-foreground">
                 All the tools you need to streamline your development workflow
                 in one beautiful, fast interface.
               </p>
@@ -32,7 +32,7 @@ export default function AuthLayoutContent({
                 <div className="text-amber-400">✓</div>
                 <div>
                   <p className="font-semibold">14+ Developer Tools</p>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     JSON, XML, Regex, Hash, and more
                   </p>
                 </div>
@@ -41,7 +41,7 @@ export default function AuthLayoutContent({
                 <div className="text-amber-400">✓</div>
                 <div>
                   <p className="font-semibold">Lightning Fast</p>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     Instant results, no dependencies
                   </p>
                 </div>
@@ -50,7 +50,7 @@ export default function AuthLayoutContent({
                 <div className="text-amber-400">✓</div>
                 <div>
                   <p className="font-semibold">100% Free</p>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-muted-foreground">
                     Open source, forever free
                   </p>
                 </div>
@@ -59,7 +59,7 @@ export default function AuthLayoutContent({
           </div>
         </div>
 
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-muted-foreground">
           <p>© 2024 Dev Toolbox. All rights reserved.</p>
         </div>
       </div>

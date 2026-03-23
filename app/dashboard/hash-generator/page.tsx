@@ -1,53 +1,50 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ToolLayout } from '@/components/tools/tool-layout'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { toast } from 'sonner'
-import { Copy } from 'lucide-react'
-import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
+import { PremiumGate } from "@/components/tools/premium-gate";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
+import { Copy } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 async function generateHash(text: string, algorithm: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(text)
-  const hashBuffer = await crypto.subtle.digest(algorithm, data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-  return hashHex
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest(algorithm, data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
 }
 
-export default function HashGeneratorPage() {
-  useTrackToolUsage('Hash Generator')
-  const [input, setInput] = useState('')
-  const [hashes, setHashes] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
+function HashGeneratorContent() {
+  const [input, setInput] = useState("");
+  const [hashes, setHashes] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const algorithms = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']
-      const newHashes: Record<string, string> = {}
-
+      const algorithms = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+      const newHashes: Record<string, string> = {};
       for (const algo of algorithms) {
-        newHashes[algo] = await generateHash(input, algo)
+        newHashes[algo] = await generateHash(input, algo);
       }
-
-      setHashes(newHashes)
-      toast.success('Hashes generated!')
-    } catch (error) {
-      toast.error('Failed to generate hashes')
+      setHashes(newHashes);
+      toast.success("Hashes generated!");
+    } catch {
+      toast.error("Failed to generate hashes");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <ToolLayout
-      title="Hash Generator"
-      description="Generate SHA hashes for your text"
-    >
+    <>
       <div className="space-y-4 mb-6">
         <label className="block text-sm font-medium">Input Text</label>
         <Textarea
@@ -57,7 +54,7 @@ export default function HashGeneratorPage() {
           className="font-mono text-sm h-32"
         />
         <Button onClick={handleGenerate} size="lg" disabled={loading}>
-          {loading ? 'Generating...' : 'Generate Hashes'}
+          {loading ? "Generating..." : "Generate Hashes"}
         </Button>
       </div>
 
@@ -71,18 +68,36 @@ export default function HashGeneratorPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    navigator.clipboard.writeText(hash)
-                    toast.success('Copied!')
+                    navigator.clipboard.writeText(hash);
+                    toast.success("Copied!");
                   }}
                 >
                   <Copy size={14} />
                 </Button>
               </div>
-              <code className="text-xs font-mono break-all text-muted-foreground">{hash}</code>
+              <code className="text-xs font-mono break-all text-muted-foreground">
+                {hash}
+              </code>
             </Card>
           ))}
         </div>
       )}
-    </ToolLayout>
-  )
+    </>
+  );
 }
+
+export default function HashGeneratorPage() {
+  useTrackToolUsage("Hash Generator");
+
+  return (
+    <ToolLayout
+      title="Hash Generator"
+      description="Generate SHA hashes for your text"
+    >
+      <PremiumGate>
+        <HashGeneratorContent />
+      </PremiumGate>
+    </ToolLayout>
+  );
+}
+
