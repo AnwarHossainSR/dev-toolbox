@@ -46,15 +46,16 @@ export function generateStaticParams() {
 export default async function ToolPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const tool = TOOLS.find((t) => toSlug(t.name) === params.slug);
+  const { slug } = await params;
+  const tool = TOOLS.find((t) => toSlug(t.name) === slug);
 
   if (!tool) {
     notFound();
   }
 
-  const Component = TOOL_COMPONENTS[params.slug];
+  const Component = TOOL_COMPONENTS[slug];
 
   const favorites = await getFavorites();
   const isFavorited = favorites.includes(tool.name);
@@ -77,9 +78,15 @@ export default async function ToolPage({
       </div>
 
       <div className="max-w-6xl">
-        <PremiumGate>
-          {Component ? <Component /> : <GeneratedTools slug={params.slug} />}
-        </PremiumGate>
+        {tool.isPremium ? (
+          <PremiumGate>
+            {Component ? <Component /> : <GeneratedTools slug={slug} />}
+          </PremiumGate>
+        ) : Component ? (
+          <Component />
+        ) : (
+          <GeneratedTools slug={slug} />
+        )}
       </div>
     </div>
   );
