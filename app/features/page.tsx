@@ -1,4 +1,6 @@
-import { Card, Footer, PublicNavbar } from "@/components";
+import { Card } from "@/components";
+import Footer from "@/components/public/footer";
+import PublicNavbar from "@/components/public/navbar";
 import {
   Code2,
   Database,

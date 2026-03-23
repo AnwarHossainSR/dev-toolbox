@@ -1,6 +1,3 @@
-export { default as Footer } from "./public/footer";
-export { default as PublicNavbar } from "./public/navbar";
-
 export { CommandPalette } from "./dashboard/command-palette";
 export { FavoritesSection } from "./dashboard/favorites-section";
 export { Navbar } from "./dashboard/navbar";
