@@ -1,56 +1,57 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ToolLayout } from '@/components/tools/tool-layout'
-import { Textarea } from '@/components/ui/textarea'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
+import { PremiumGate } from "@/components/tools/premium-gate";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
+import { useState } from "react";
+import { toast } from "sonner";
 
 function decodeJWT(token: string) {
   try {
-    const parts = token.split('.')
+    const parts = token.split(".");
     if (parts.length !== 3) {
-      throw new Error('Invalid JWT format')
+      throw new Error("Invalid JWT format");
     }
 
-    const decoded: Record<string, any> = {}
+    const decoded: Record<string, any> = {};
 
     // Decode header
-    const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')))
-    decoded.header = header
+    const header = JSON.parse(
+      atob(parts[0].replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    decoded.header = header;
 
     // Decode payload
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
-    decoded.payload = payload
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    decoded.payload = payload;
 
-    return decoded
+    return decoded;
   } catch {
-    throw new Error('Invalid JWT token')
+    throw new Error("Invalid JWT token");
   }
 }
 
-export default function JwtDecoderPage() {
-  useTrackToolUsage('JWT Decoder')
-  const [input, setInput] = useState('')
-  const [decoded, setDecoded] = useState<Record<string, any> | null>(null)
+function JwtDecoderContent() {
+  const [input, setInput] = useState("");
+  const [decoded, setDecoded] = useState<Record<string, any> | null>(null);
 
   const handleDecode = () => {
     try {
-      const result = decodeJWT(input)
-      setDecoded(result)
-      toast.success('Decoded successfully!')
+      const result = decodeJWT(input);
+      setDecoded(result);
+      toast.success("Decoded successfully!");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Decoding failed')
+      toast.error(error instanceof Error ? error.message : "Decoding failed");
     }
-  }
+  };
 
   return (
-    <ToolLayout
-      title="JWT Decoder"
-      description="Decode and inspect JWT tokens"
-    >
+    <>
       <div className="space-y-4 mb-6">
         <label className="block text-sm font-medium">JWT Token</label>
         <Textarea
@@ -84,6 +85,19 @@ export default function JwtDecoderPage() {
           </div>
         </div>
       )}
-    </ToolLayout>
-  )
+    </>
+  );
 }
+
+export default function JwtDecoderPage() {
+  useTrackToolUsage("JWT Decoder");
+
+  return (
+    <ToolLayout title="JWT Decoder" description="Decode and inspect JWT tokens">
+      <PremiumGate>
+        <JwtDecoderContent />
+      </PremiumGate>
+    </ToolLayout>
+  );
+}
+

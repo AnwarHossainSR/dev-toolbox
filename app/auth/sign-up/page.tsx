@@ -1,38 +1,125 @@
-'use client'
+"use client";
 
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { AlertCircle, Check, Eye, EyeOff, Loader2, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-export default function Page() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [repeatPassword, setRepeatPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+function PasswordStrength({ password }: { password: string }) {
+  const strength = {
+    score: 0,
+    label: "Weak",
+    color: "text-red-400",
+  };
+
+  if (password.length >= 8) strength.score++;
+  if (password.length >= 12) strength.score++;
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength.score++;
+  if (/\d/.test(password)) strength.score++;
+  if (/[^A-Za-z0-9]/.test(password)) strength.score++;
+
+  if (strength.score <= 2) {
+    strength.label = "Weak";
+    strength.color = "text-red-400";
+  } else if (strength.score === 3) {
+    strength.label = "Fair";
+    strength.color = "text-yellow-400";
+  } else if (strength.score === 4) {
+    strength.label = "Good";
+    strength.color = "text-blue-400";
+  } else {
+    strength.label = "Strong";
+    strength.color = "text-green-400";
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all ${
+              strength.score === 1
+                ? "w-1/4 bg-red-500"
+                : strength.score === 2
+                  ? "w-1/2 bg-yellow-500"
+                  : strength.score === 3
+                    ? "w-3/4 bg-blue-500"
+                    : "w-full bg-green-500"
+            }`}
+          />
+        </div>
+        <span className={`text-xs font-semibold ${strength.color}`}>
+          {strength.label}
+        </span>
+      </div>
+      <ul className="space-y-1 text-xs text-muted-foreground">
+        <li className="flex items-center gap-2">
+          {password.length >= 8 ? (
+            <Check className="h-3 w-3 text-green-400" />
+          ) : (
+            <X className="h-3 w-3 text-muted-foreground" />
+          )}
+          At least 8 characters
+        </li>
+        <li className="flex items-center gap-2">
+          {/[A-Z]/.test(password) && /[a-z]/.test(password) ? (
+            <Check className="h-3 w-3 text-green-400" />
+          ) : (
+            <X className="h-3 w-3 text-muted-foreground" />
+          )}
+          Mix of uppercase and lowercase
+        </li>
+        <li className="flex items-center gap-2">
+          {/\d/.test(password) ? (
+            <Check className="h-3 w-3 text-green-400" />
+          ) : (
+            <X className="h-3 w-3 text-muted-foreground" />
+          )}
+          Includes a number
+        </li>
+        <li className="flex items-center gap-2">
+          {/[^A-Za-z0-9]/.test(password) ? (
+            <Check className="h-3 w-3 text-green-400" />
+          ) : (
+            <X className="h-3 w-3 text-muted-foreground" />
+          )}
+          Includes a special character
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+export default function SignUpPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
-    setIsLoading(true)
-    setError(null)
+    e.preventDefault();
+    const supabase = createClient();
+    setIsLoading(true);
+    setError(null);
 
     if (password !== repeatPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -40,86 +127,171 @@ export default function Page() {
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/protected`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-      })
-      if (error) throw error
-      router.push('/auth/sign-up-success')
+      });
+      if (error) throw error;
+      router.push("/auth/sign-up-success");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const passwordsMatch = password === repeatPassword && password.length > 0;
+  const isPasswordStrong =
+    password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password);
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Sign up</CardTitle>
-              <CardDescription>Create a new account</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSignUp}>
-                <div className="flex flex-col gap-6">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="m@example.com"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
-                    </div>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="repeat-password">Repeat Password</Label>
-                    </div>
-                    <Input
-                      id="repeat-password"
-                      type="password"
-                      required
-                      value={repeatPassword}
-                      onChange={(e) => setRepeatPassword(e.target.value)}
-                    />
-                  </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating an account...' : 'Sign up'}
-                  </Button>
-                </div>
-                <div className="mt-4 text-center text-sm">
-                  Already have an account?{' '}
-                  <Link
-                    href="/auth/login"
-                    className="underline underline-offset-4"
-                  >
-                    Login
-                  </Link>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">Create Account</h1>
+        <p className="text-muted-foreground">
+          Join Dev Toolbox and start using powerful tools
+        </p>
       </div>
+
+      <div className="bg-card rounded-lg border border-border p-6">
+        <form onSubmit={handleSignUp} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-foreground">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="password" className="text-foreground">
+              Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500 pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {password && <PasswordStrength password={password} />}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="repeat-password" className="text-foreground">
+              Confirm Password
+            </Label>
+            <div className="relative">
+              <Input
+                id="repeat-password"
+                type={showRepeatPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={repeatPassword}
+                onChange={(e) => setRepeatPassword(e.target.value)}
+                disabled={isLoading}
+                className="border-input bg-muted placeholder:text-muted-foreground focus:border-amber-500 pr-20"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRepeatPassword((v) => !v)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showRepeatPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+                {repeatPassword &&
+                  (passwordsMatch ? (
+                    <Check className="h-4 w-4 text-green-400" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-400" />
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <div className="flex gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading || !passwordsMatch || !isPasswordStrong}
+            className="w-full h-11 bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600 font-semibold disabled:opacity-50"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-card px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-input hover:bg-muted"
+          >
+            GitHub
+          </Button>
+        </form>
+      </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link
+          href="/auth/login"
+          className="font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+        >
+          Sign in
+        </Link>
+      </p>
     </div>
-  )
+  );
 }
+
