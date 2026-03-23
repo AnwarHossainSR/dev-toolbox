@@ -1,6 +1,9 @@
 "use client";
 
-import { Button, Card, Input, ToolLayout } from "@/components";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 import { Copy } from "lucide-react";
 import { useState } from "react";

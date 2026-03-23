@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components";
-import { Input } from "@/components";
-import { Label } from "@/components";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle, Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import Link from "next/link";

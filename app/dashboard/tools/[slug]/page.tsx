@@ -1,19 +1,17 @@
-import {
-  Base64Encoder,
-  CaseConverter,
-  ColorConverter,
-  FavoriteButton,
-  GeneratedTools,
-  JsonFormatter,
-  JwtDecoder,
-  MarkdownPreviewer,
-  PremiumGate,
-  RegexTester,
-  UnixTimestamp,
-  UrlEncoder,
-  UuidGenerator,
-  WordCounter,
-} from "@/components";
+import { Base64Encoder } from "@/components/tools/base64-encoder";
+import { CaseConverter } from "@/components/tools/case-converter";
+import { ColorConverter } from "@/components/tools/color-converter";
+import { FavoriteButton } from "@/components/tools/favorite-button";
+import { GeneratedTools } from "@/components/tools/generated-tools";
+import { JsonFormatter } from "@/components/tools/json-formatter";
+import { JwtDecoder } from "@/components/tools/jwt-decoder";
+import { MarkdownPreviewer } from "@/components/tools/markdown-previewer";
+import { PremiumGate } from "@/components/tools/premium-gate";
+import { RegexTester } from "@/components/tools/regex-tester";
+import { UnixTimestamp } from "@/components/tools/unix-timestamp";
+import { UrlEncoder } from "@/components/tools/url-encoder";
+import { UuidGenerator } from "@/components/tools/uuid-generator";
+import { WordCounter } from "@/components/tools/word-counter";
 import { getFavorites } from "@/lib/tool-actions";
 import { TOOLS } from "@/lib/tools";
 import { notFound } from "next/navigation";

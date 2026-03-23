@@ -1,15 +1,12 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  FieldGroup,
-  FieldLabel,
-  Input,
-  PremiumGate,
-  Textarea,
-  ToolLayout,
-} from "@/components";
+import { PremiumGate } from "@/components/tools/premium-gate";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 import { useState } from "react";
 import { toast } from "sonner";

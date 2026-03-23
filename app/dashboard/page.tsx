@@ -1,4 +1,5 @@
-import { FavoritesSection, RecentlyUsed } from "@/components";
+import { FavoritesSection } from "@/components/dashboard/favorites-section";
+import { RecentlyUsed } from "@/components/dashboard/recently-used";
 import { getUserPlan } from "@/lib/subscription";
 import { TOOLS } from "@/lib/tools";
 import { Crown } from "lucide-react";

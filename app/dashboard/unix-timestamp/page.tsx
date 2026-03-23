@@ -1,6 +1,7 @@
 "use client";
 
-import { ToolLayout, UnixTimestamp } from "@/components";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { UnixTimestamp } from "@/components/tools/unix-timestamp";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 
 export default function UnixTimestampPage() {

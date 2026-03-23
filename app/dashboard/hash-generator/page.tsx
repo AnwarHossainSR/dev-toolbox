@@ -1,10 +1,10 @@
 "use client";
 
-import { PremiumGate } from "@/components";
-import { ToolLayout } from "@/components";
-import { Button } from "@/components";
-import { Card } from "@/components";
-import { Textarea } from "@/components";
+import { PremiumGate } from "@/components/tools/premium-gate";
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 import { Copy } from "lucide-react";
 import { useState } from "react";
