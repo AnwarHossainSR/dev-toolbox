@@ -1,6 +1,6 @@
-import Footer from "@/components/public/footer";
-import PublicNavbar from "@/components/public/navbar";
-import { Card } from "@/components/ui/card";
+import { Footer } from "@/components";
+import { PublicNavbar } from "@/components";
+import { Card } from "@/components";
 import { Heart, Target, Users, Zap } from "lucide-react";
 
 export default function AboutPage() {

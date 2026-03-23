@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ToolLayout } from '@/components/tools/tool-layout'
-import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { ToolLayout } from '@/components'
+import { Input } from '@/components'
+import { Card } from '@/components'
+import { Button } from '@/components'
 import { toast } from 'sonner'
 import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
 

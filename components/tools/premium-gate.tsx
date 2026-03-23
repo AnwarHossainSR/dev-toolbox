@@ -41,7 +41,7 @@ export function PremiumGate({ children, plan: planProp }: PremiumGateProps) {
 
 function PremiumPaywall() {
   const premiumFeatures = [
-    "All 17 developer tools — unlocked",
+    "All premium tools — unlocked",
     "Unlimited usage with no rate limits",
     "Priority email support",
     "Early access to new tools",

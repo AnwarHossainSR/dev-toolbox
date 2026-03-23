@@ -18,6 +18,7 @@ import {
   Fingerprint,
   GitCompare,
   Hash,
+  Image as ImageIcon,
   KeyRound,
   LayoutDashboard,
   Link2,
@@ -53,18 +54,46 @@ const TOOL_ICONS: Record<string, React.ElementType> = {
   "QR Code Generator": QrCode,
   "Unix Timestamp": Clock,
   "Password Generator": Lock,
+  "JSON CSV Converter": ArrowLeftRight,
+  "Cron Expression Builder": Clock,
+  "URL Parser Inspector": Link2,
+  "JWT Generator": KeyRound,
+  "Base64 File Encoder Decoder": ArrowLeftRight,
+  "Diff Patch Generator": GitCompare,
+  "HTML Markdown Converter": FileText,
+  "Lorem Ipsum Fake Data": AlignLeft,
+  "UUID Bulk Generator": Fingerprint,
+  "Timezone Meeting Planner": Clock,
+  "HTTP Status Lookup": Code2,
+  "SQL Prettify Minify": Database,
+  "Regex Cheatsheet Templates": Regex,
+  "Password Strength Auditor": Lock,
+  "Image Resizer": ImageIcon,
+  "Image Compressor": ImageIcon,
+  "Image Cropper": ImageIcon,
+  "Image Format Converter": ImageIcon,
+  "Background Remover": ImageIcon,
+  "Image Watermark": ImageIcon,
+  "Image to Base64": ImageIcon,
+  "Base64 to Image": ImageIcon,
+  "Color Palette Extractor": Palette,
+  "EXIF Metadata Viewer": ImageIcon,
+  "Screenshot Annotator": ImageIcon,
+  "Batch Image Renamer": ImageIcon,
 };
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
   developer: Code2,
   text: FileText,
   utility: Zap,
+  image: ImageIcon,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
   developer: "Developer",
   text: "Text",
   utility: "Utility",
+  image: "Image",
 };
 
 export function Sidebar({ plan = "free" }: { plan?: Plan }) {
@@ -255,7 +284,7 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
         {plan === "free" ? (
           <div className="mb-2 flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 ring-1 ring-amber-500/20 dark:text-amber-400">
             <Crown className="h-3.5 w-3.5 shrink-0" />
-            <span className="font-medium">9 tools locked</span>
+            <span className="font-medium">{proCount} tools locked</span>
             <Link
               href="/pricing"
               className="ml-auto font-semibold underline underline-offset-2 hover:no-underline"

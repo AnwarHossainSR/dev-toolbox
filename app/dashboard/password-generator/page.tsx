@@ -1,8 +1,6 @@
 "use client";
 
-import { PasswordGenerator } from "@/components/tools/password-generator";
-import { PremiumGate } from "@/components/tools/premium-gate";
-import { ToolLayout } from "@/components/tools/tool-layout";
+import { PasswordGenerator, PremiumGate, ToolLayout } from "@/components";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 
 export default function PasswordGeneratorPage() {

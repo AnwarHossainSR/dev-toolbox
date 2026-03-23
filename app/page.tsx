@@ -1,9 +1,6 @@
 "use client";
 
-import Footer from "@/components/public/footer";
-import PublicNavbar from "@/components/public/navbar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button, Card, Footer, PublicNavbar } from "@/components";
 import { ArrowRight, Code2, Gauge, Lock, Palette } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";

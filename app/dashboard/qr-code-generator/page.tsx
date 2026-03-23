@@ -1,10 +1,6 @@
 "use client";
 
-import { PremiumGate } from "@/components/tools/premium-gate";
-import { ToolLayout } from "@/components/tools/tool-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button, Card, Input, PremiumGate, ToolLayout } from "@/components";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 import { Download } from "lucide-react";
 import { useState } from "react";

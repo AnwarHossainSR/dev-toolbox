@@ -1,60 +1,58 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ToolLayout } from '@/components/tools/tool-layout'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
+import { Button, Textarea, ToolLayout } from "@/components";
+import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
+import { useState } from "react";
+import { toast } from "sonner";
 
 function jsonToYaml(json: string): string {
   try {
-    const obj = JSON.parse(json)
-    return convertToYaml(obj)
+    const obj = JSON.parse(json);
+    return convertToYaml(obj);
   } catch {
-    throw new Error('Invalid JSON')
+    throw new Error("Invalid JSON");
   }
 }
 
 function convertToYaml(obj: any, indent = 0): string {
-  const spaces = ' '.repeat(indent)
-  let yaml = ''
+  const spaces = " ".repeat(indent);
+  let yaml = "";
 
   if (Array.isArray(obj)) {
     obj.forEach((item) => {
-      if (typeof item === 'object' && item !== null) {
-        yaml += `${spaces}- ${convertToYaml(item, indent + 2).trim()}\n`
+      if (typeof item === "object" && item !== null) {
+        yaml += `${spaces}- ${convertToYaml(item, indent + 2).trim()}\n`;
       } else {
-        yaml += `${spaces}- ${item}\n`
+        yaml += `${spaces}- ${item}\n`;
       }
-    })
-  } else if (typeof obj === 'object') {
+    });
+  } else if (typeof obj === "object") {
     Object.entries(obj).forEach(([key, value]) => {
-      if (typeof value === 'object' && value !== null) {
-        yaml += `${spaces}${key}:\n${convertToYaml(value, indent + 2)}`
+      if (typeof value === "object" && value !== null) {
+        yaml += `${spaces}${key}:\n${convertToYaml(value, indent + 2)}`;
       } else {
-        yaml += `${spaces}${key}: ${value}\n`
+        yaml += `${spaces}${key}: ${value}\n`;
       }
-    })
+    });
   }
 
-  return yaml
+  return yaml;
 }
 
 export default function JsonToYamlPage() {
-  useTrackToolUsage('JSON to YAML')
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
+  useTrackToolUsage("JSON to YAML");
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
 
   const handleConvert = () => {
     try {
-      const result = jsonToYaml(input)
-      setOutput(result)
-      toast.success('Converted successfully!')
+      const result = jsonToYaml(input);
+      setOutput(result);
+      toast.success("Converted successfully!");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Conversion failed')
+      toast.error(error instanceof Error ? error.message : "Conversion failed");
     }
-  }
+  };
 
   return (
     <ToolLayout
@@ -88,5 +86,6 @@ export default function JsonToYamlPage() {
         Convert JSON to YAML
       </Button>
     </ToolLayout>
-  )
+  );
 }
+

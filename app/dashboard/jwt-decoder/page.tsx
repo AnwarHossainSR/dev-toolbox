@@ -1,10 +1,6 @@
 "use client";
 
-import { PremiumGate } from "@/components/tools/premium-gate";
-import { ToolLayout } from "@/components/tools/tool-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Button, Card, PremiumGate, Textarea, ToolLayout } from "@/components";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 import { useState } from "react";
 import { toast } from "sonner";

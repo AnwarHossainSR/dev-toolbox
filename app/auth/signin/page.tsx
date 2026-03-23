@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/components'
+import { Input } from '@/components'
 import { toast } from 'sonner'
-import { Field, FieldLabel, FieldGroup } from '@/components/ui/field'
+import { Field, FieldLabel, FieldGroup } from '@/components'
 
 export default function SignInPage() {
   const router = useRouter()

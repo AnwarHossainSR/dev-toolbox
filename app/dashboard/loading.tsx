@@ -1,5 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
+import { Skeleton, Spinner } from "@/components";
 
 export default function DashboardLoading() {
   return (

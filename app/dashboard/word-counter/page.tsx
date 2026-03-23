@@ -1,7 +1,6 @@
 "use client";
 
-import { ToolLayout } from "@/components/tools/tool-layout";
-import { WordCounter } from "@/components/tools/word-counter";
+import { ToolLayout, WordCounter } from "@/components";
 import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
 
 export default function WordCounterPage() {
