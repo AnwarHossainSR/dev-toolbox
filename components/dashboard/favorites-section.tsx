@@ -39,9 +39,8 @@ export function FavoritesSection() {
         {tools.map((toolName) => {
           const tool = TOOLS.find((t) => t.name === toolName);
           if (!tool) return null;
-          const slug = toolName.toLowerCase().replace(/\s+/g, "-");
           return (
-            <Link key={toolName} href={`/dashboard/${slug}`}>
+            <Link key={toolName} href={tool.href}>
               <Card className="p-4 border border-yellow-500/30 hover:bg-yellow-500/5 backdrop-blur cursor-pointer transition-all h-full">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-2xl">{tool.icon}</span>

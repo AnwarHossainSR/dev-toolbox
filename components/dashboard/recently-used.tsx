@@ -39,9 +39,8 @@ export function RecentlyUsed() {
         {tools.map((toolName) => {
           const tool = TOOLS.find((t) => t.name === toolName);
           if (!tool) return null;
-          const slug = toolName.toLowerCase().replace(/\s+/g, "-");
           return (
-            <Link key={toolName} href={`/dashboard/${slug}`}>
+            <Link key={toolName} href={tool.href}>
               <Card className="p-4 cursor-pointer hover:shadow-lg transition-shadow text-center h-full">
                 <div className="text-2xl mb-2">{tool.icon}</div>
                 <p className="text-xs font-medium text-foreground line-clamp-2">

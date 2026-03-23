@@ -24,11 +24,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {TOOLS.map((tool) => {
-          const slug = tool.name.toLowerCase().replace(/\s+/g, "-");
           return (
             <Link
               key={tool.name}
-              href={`/dashboard/${slug}`}
+              href={tool.href}
               className="block p-4 border border-border rounded-lg hover:bg-accent transition-colors"
             >
               <div className="flex items-center gap-3 mb-2">

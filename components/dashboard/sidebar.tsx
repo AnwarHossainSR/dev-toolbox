@@ -25,6 +25,7 @@ import {
   Palette,
   QrCode,
   Regex,
+  Sparkles,
   Type,
   Zap,
 } from "lucide-react";
@@ -92,29 +93,34 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-60 flex flex-col h-full bg-zinc-950 border-r border-zinc-800/60 overflow-hidden">
+    <aside className="flex h-full w-64 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       {/* Logo */}
-      <div className="h-16 flex items-center gap-3 px-4 border-b border-zinc-800/60 shrink-0">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-500 to-yellow-500 shrink-0">
-          <Zap className="h-4 w-4 text-black" />
+      <div className="h-16 shrink-0 border-b border-sidebar-border px-4">
+        <div className="flex h-full items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-500 to-yellow-500 shrink-0">
+            <Zap className="h-4 w-4 text-black" />
+          </div>
+          <div className="min-w-0">
+            <Link
+              href="/dashboard"
+              className="block truncate text-base font-bold tracking-tight text-foreground transition-opacity hover:opacity-80"
+            >
+              Dev Toolbox
+            </Link>
+            <p className="text-[11px] text-muted-foreground">Workspace</p>
+          </div>
         </div>
-        <Link
-          href="/dashboard"
-          className="font-bold text-white text-base tracking-tight hover:opacity-80 transition-opacity"
-        >
-          Dev Toolbox
-        </Link>
       </div>
 
       {/* Dashboard link */}
-      <div className="px-3 pt-3 shrink-0">
+      <div className="shrink-0 px-3 pt-3">
         <Link
           href="/dashboard"
           className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
             pathname === "/dashboard"
-              ? "bg-amber-500/10 text-amber-400"
-              : "text-zinc-400 hover:text-white hover:bg-zinc-800/60",
+              ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground",
           )}
         >
           <LayoutDashboard className="h-4 w-4 shrink-0" />
@@ -123,10 +129,15 @@ export function Sidebar() {
       </div>
 
       {/* Tools label */}
-      <div className="px-4 pt-4 pb-1 shrink-0">
-        <p className="text-[10px] uppercase tracking-widest font-semibold text-zinc-500">
-          Tools
-        </p>
+      <div className="shrink-0 px-4 pb-2 pt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Tools
+          </p>
+          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+            {TOOLS.length}
+          </span>
+        </div>
       </div>
 
       {/* Categories */}
@@ -141,12 +152,12 @@ export function Sidebar() {
               <div key={category}>
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300 rounded-md hover:bg-zinc-800/40 transition-colors group mt-1"
+                  className="group mt-1 flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   <div className="flex items-center gap-2">
                     <CategoryIcon className="h-3.5 w-3.5" />
                     <span>{CATEGORY_LABELS[category]}</span>
-                    <span className="text-[10px] bg-zinc-800 text-zinc-500 rounded px-1.5 py-0.5 font-normal normal-case tracking-normal">
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
                       {tools.length}
                     </span>
                   </div>
@@ -171,23 +182,32 @@ export function Sidebar() {
                           key={tool.name}
                           href={tool.href}
                           className={cn(
-                            "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors group",
+                            "group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                             isActive
-                              ? "bg-amber-500/10 text-amber-400 font-medium"
-                              : "text-zinc-400 hover:text-white hover:bg-zinc-800/60",
+                              ? "bg-amber-500/15 font-medium text-amber-700 dark:text-amber-400"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground",
                           )}
                         >
-                          <Icon
+                          <span
                             className={cn(
-                              "h-3.5 w-3.5 shrink-0 transition-colors",
+                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border",
                               isActive
-                                ? "text-amber-400"
-                                : "text-zinc-500 group-hover:text-zinc-300",
+                                ? "border-amber-500/40 bg-amber-500/15"
+                                : "border-border bg-background group-hover:bg-card",
                             )}
-                          />
+                          >
+                            <Icon
+                              className={cn(
+                                "h-3.5 w-3.5 transition-colors",
+                                isActive
+                                  ? "text-amber-700 dark:text-amber-400"
+                                  : "text-muted-foreground group-hover:text-foreground",
+                              )}
+                            />
+                          </span>
                           <span className="truncate">{tool.name}</span>
                           {isActive && (
-                            <ChevronRight className="h-3 w-3 ml-auto text-amber-400/60 shrink-0" />
+                            <ChevronRight className="ml-auto h-3 w-3 shrink-0 text-amber-700/70 dark:text-amber-400/70" />
                           )}
                         </Link>
                       );
@@ -201,13 +221,17 @@ export function Sidebar() {
       </div>
 
       {/* User section */}
-      <div className="shrink-0 border-t border-zinc-800/60 p-3">
+      <div className="shrink-0 border-t border-sidebar-border p-3">
+        <div className="mb-2 flex items-center gap-2 rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>All tools are ready</span>
+        </div>
         <button
           onClick={handleSignOut}
           disabled={isPending}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
+          className="group flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400"
         >
-          <LogOut className="h-4 w-4 shrink-0 transition-colors group-hover:text-red-400" />
+          <LogOut className="h-4 w-4 shrink-0 transition-colors group-hover:text-red-500 dark:group-hover:text-red-400" />
           <span>{isPending ? "Signing out…" : "Sign Out"}</span>
         </button>
       </div>

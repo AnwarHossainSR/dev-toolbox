@@ -23,8 +23,9 @@ export function CommandPalette() {
   }, []);
 
   const handleSelect = (toolName: string) => {
-    const slug = toolName.toLowerCase().replace(/\s+/g, "-");
-    router.push(`/dashboard/${slug}`);
+    const tool = TOOLS.find((t) => t.name === toolName);
+    if (!tool) return;
+    router.push(tool.href);
     setOpen(false);
   };
 
