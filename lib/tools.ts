@@ -61,7 +61,7 @@ export const TOOLS: Tool[] = [
     category: "text",
     description: "Count words, characters, and lines",
     icon: "#",
-    href: "/dashboard/tools/word-counter",
+    href: "/dashboard/word-counter",
   },
   {
     name: "Text Case Converter",
@@ -117,7 +117,7 @@ export const TOOLS: Tool[] = [
     category: "utility",
     description: "Convert between Unix timestamps and human-readable dates",
     icon: "⏱",
-    href: "/dashboard/tools/unix-timestamp",
+    href: "/dashboard/unix-timestamp",
   },
   {
     name: "Password Generator",
