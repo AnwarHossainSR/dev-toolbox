@@ -1,35 +1,45 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ToolLayout } from '@/components'
-import { Textarea } from '@/components'
-import { Button } from '@/components'
-import { toast } from 'sonner'
-import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const CASES = {
   uppercase: (s: string) => s.toUpperCase(),
   lowercase: (s: string) => s.toLowerCase(),
-  capitalize: (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(),
-  title: (s: string) => s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
-  'camelCase': (s: string) => s.replace(/(?:^\w|[A-Z]|\b\w)/g, (w, i) => i === 0 ? w.toLowerCase() : w.toUpperCase()).replace(/\s+/g, ''),
-  'snake_case': (s: string) => s.toLowerCase().replace(/\s+/g, '_'),
-  'kebab-case': (s: string) => s.toLowerCase().replace(/\s+/g, '-'),
-}
+  capitalize: (s: string) =>
+    s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(),
+  title: (s: string) =>
+    s
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" "),
+  camelCase: (s: string) =>
+    s
+      .replace(/(?:^\w|[A-Z]|\b\w)/g, (w, i) =>
+        i === 0 ? w.toLowerCase() : w.toUpperCase(),
+      )
+      .replace(/\s+/g, ""),
+  snake_case: (s: string) => s.toLowerCase().replace(/\s+/g, "_"),
+  "kebab-case": (s: string) => s.toLowerCase().replace(/\s+/g, "-"),
+};
 
 export default function CaseConverterPage() {
-  useTrackToolUsage('Case Converter')
-  const [input, setInput] = useState('')
-  const [outputs, setOutputs] = useState<Record<string, string>>({})
+  useTrackToolUsage("Case Converter");
+  const [input, setInput] = useState("");
+  const [outputs, setOutputs] = useState<Record<string, string>>({});
 
   const handleConvert = () => {
-    const newOutputs: Record<string, string> = {}
+    const newOutputs: Record<string, string> = {};
     Object.entries(CASES).forEach(([caseType, converter]) => {
-      newOutputs[caseType] = converter(input)
-    })
-    setOutputs(newOutputs)
-    toast.success('Converted successfully!')
-  }
+      newOutputs[caseType] = converter(input);
+    });
+    setOutputs(newOutputs);
+    toast.success("Converted successfully!");
+  };
 
   return (
     <ToolLayout
@@ -54,7 +64,13 @@ export default function CaseConverterPage() {
           {Object.entries(outputs).map(([caseType, text]) => (
             <div key={caseType} className="space-y-2">
               <label className="block text-sm font-medium capitalize">
-                {caseType === 'camelCase' ? 'camelCase' : caseType === 'snake_case' ? 'snake_case' : caseType === 'kebab-case' ? 'kebab-case' : caseType}
+                {caseType === "camelCase"
+                  ? "camelCase"
+                  : caseType === "snake_case"
+                    ? "snake_case"
+                    : caseType === "kebab-case"
+                      ? "kebab-case"
+                      : caseType}
               </label>
               <div className="p-3 rounded-md bg-muted font-mono text-sm break-all">
                 {text}
@@ -63,8 +79,8 @@ export default function CaseConverterPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(text)
-                  toast.success('Copied!')
+                  navigator.clipboard.writeText(text);
+                  toast.success("Copied!");
                 }}
               >
                 Copy
@@ -74,5 +90,6 @@ export default function CaseConverterPage() {
         </div>
       )}
     </ToolLayout>
-  )
+  );
 }
+

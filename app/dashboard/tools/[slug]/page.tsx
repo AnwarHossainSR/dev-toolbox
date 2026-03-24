@@ -16,6 +16,8 @@ import { getFavorites } from "@/lib/tool-actions";
 import { TOOLS } from "@/lib/tools";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "json-formatter": JsonFormatter,
   "base64-encoder-decoder": Base64Encoder,
@@ -35,12 +37,6 @@ function toSlug(name: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-export function generateStaticParams() {
-  return TOOLS.map((tool) => ({
-    slug: toSlug(tool.name),
-  }));
 }
 
 export default async function ToolPage({
