@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Code2, Gauge, Lock, Palette } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 const features = [
   {
@@ -53,12 +52,6 @@ const tools = [
 ];
 
 export default function Home() {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <PublicNavbar />

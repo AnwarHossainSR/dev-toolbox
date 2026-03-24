@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ToolLayout } from '@/components/tools/tool-layout'
-import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
+import { ToolLayout } from '@/components'
+import { Textarea } from '@/components'
+import { Button } from '@/components'
 import { toast } from 'sonner'
 import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
 

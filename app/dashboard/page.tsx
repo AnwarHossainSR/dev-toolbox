@@ -7,6 +7,7 @@ import Link from "next/link";
 
 export default async function DashboardPage() {
   const plan = await getUserPlan();
+  const lockedCount = TOOLS.filter((t) => t.isPremium).length;
 
   return (
     <div className="p-8">
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
           <Crown className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
           <p className="text-sm text-foreground">
             <span className="font-semibold">
-              9 tools are locked on the Free plan.
+              {lockedCount} tools are locked on the Free plan.
             </span>{" "}
             <Link
               href="/pricing"

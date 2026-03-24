@@ -1,8 +1,15 @@
 "use client";
 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TOOLS } from "@/lib/tools";
-import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -45,16 +52,13 @@ export function CommandPalette() {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden p-0 shadow-lg">
-          <Command className="[&_[cmdk-input]]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-item]]:px-2">
-            <Command.Input
-              placeholder="Search tools... (⌘K)"
-              className="border-b"
-            />
-            <Command.List className="max-h-[300px] overflow-y-auto">
-              <Command.Empty>No tools found.</Command.Empty>
+          <Command>
+            <CommandInput placeholder="Search tools... (Ctrl/⌘ + K)" />
+            <CommandList className="max-h-75 overflow-y-auto">
+              <CommandEmpty>No tools found.</CommandEmpty>
 
               {Object.entries(toolsByCategory).map(([category, tools]) => (
-                <Command.Group
+                <CommandGroup
                   key={category}
                   heading={
                     category.charAt(0).toUpperCase() +
@@ -63,7 +67,7 @@ export function CommandPalette() {
                   }
                 >
                   {tools.map((tool) => (
-                    <Command.Item
+                    <CommandItem
                       key={tool.name}
                       value={tool.name}
                       onSelect={handleSelect}
@@ -76,11 +80,11 @@ export function CommandPalette() {
                           {tool.description}
                         </span>
                       </div>
-                    </Command.Item>
+                    </CommandItem>
                   ))}
-                </Command.Group>
+                </CommandGroup>
               ))}
-            </Command.List>
+            </CommandList>
           </Command>
         </DialogContent>
       </Dialog>

@@ -1,14 +1,24 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Zap } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { LayoutGrid, Moon, Sun, Zap } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PublicNavbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -74,19 +84,33 @@ export default function PublicNavbar() {
                 <Moon className="h-4 w-4" />
               )}
             </Button>
-            <Button
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
-              asChild
-            >
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600"
-              asChild
-            >
-              <Link href="/auth/sign-up">Get Started</Link>
-            </Button>
+            {isLoggedIn ? (
+              <Button
+                className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600 gap-2"
+                asChild
+              >
+                <Link href="/dashboard">
+                  <LayoutGrid className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent"
+                  asChild
+                >
+                  <Link href="/auth/login">Sign In</Link>
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:from-amber-600 hover:to-yellow-600"
+                  asChild
+                >
+                  <Link href="/auth/sign-up">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
