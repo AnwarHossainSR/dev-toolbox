@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type Props = {
@@ -168,6 +168,65 @@ function ImageToolDesignWrapper({
   );
 }
 
+function StyledFilePicker({
+  label,
+  onSelect,
+  accept = "image/*",
+  multiple = false,
+}: {
+  label: string;
+  onSelect: (files: FileList | null) => void;
+  accept?: string;
+  multiple?: boolean;
+}) {
+  const id = useId();
+  const [selected, setSelected] = useState("No file selected");
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+        {label}
+      </label>
+      <div className="rounded-xl border border-sky-200 bg-linear-to-br from-white to-sky-50 p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            htmlFor={id}
+            className="inline-flex cursor-pointer items-center rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+          >
+            Choose File
+          </label>
+          <span className="line-clamp-1 text-xs text-slate-600">
+            {selected}
+          </span>
+        </div>
+      </div>
+      <Input
+        id={id}
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        className="sr-only"
+        onChange={(e) => {
+          const files = e.target.files;
+          if (!files || !files.length) {
+            setSelected("No file selected");
+            onSelect(files);
+            return;
+          }
+          const names = Array.from(files)
+            .slice(0, 2)
+            .map((f) => f.name)
+            .join(", ");
+          setSelected(
+            files.length > 2 ? `${names} +${files.length - 2} more` : names,
+          );
+          onSelect(files);
+        }}
+      />
+    </div>
+  );
+}
+
 function GeminiImageAssistant({ slug }: { slug: string }) {
   const [prompt, setPrompt] = useState(
     "Suggest optimal settings and steps for this image task.",
@@ -223,11 +282,10 @@ function GeminiImageAssistant({ slug }: { slug: string }) {
             Beta
           </div>
         </div>
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
+        <StyledFilePicker
+          label="Reference image"
+          onSelect={async (files) => {
+            const f = files?.[0];
             if (!f) {
               setImageMeta(null);
               return;
@@ -978,10 +1036,40 @@ function PasswordStrengthAuditor() {
   );
 }
 
+function ImagePreviewPanel({
+  title,
+  src,
+  emptyText,
+}: {
+  title: string;
+  src?: string;
+  emptyText: string;
+}) {
+  return (
+    <Card className="p-4">
+      <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+        {title}
+      </p>
+      {src ? (
+        <img
+          src={src}
+          alt={title}
+          className="h-72 w-full rounded-md border bg-white object-contain"
+        />
+      ) : (
+        <div className="flex h-72 items-center justify-center rounded-md border border-dashed bg-slate-50 px-4 text-center text-sm text-slate-500">
+          {emptyText}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function ImageResizer() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [w, setW] = useState(800);
   const [h, setH] = useState(600);
+  const [result, setResult] = useState("");
 
   const onFile = async (f?: File) => {
     if (!f) return;
@@ -989,6 +1077,7 @@ function ImageResizer() {
     setImg(loaded);
     setW(loaded.width);
     setH(loaded.height);
+    setResult("");
   };
 
   const run = async () => {
@@ -1005,41 +1094,65 @@ function ImageResizer() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0, w, h);
-    downloadDataUrl(
-      canvas.toDataURL("image/png"),
-      `resized-${img.fileName}.png`,
-    );
+    setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={(e) => onFile(e.target.files?.[0])}
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <Input
-          type="number"
-          value={w}
-          onChange={(e) => setW(Number(e.target.value || 1))}
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Resize</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={(files) => onFile(files?.[0])}
         />
-        <Input
-          type="number"
-          value={h}
-          onChange={(e) => setH(Number(e.target.value || 1))}
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            value={w}
+            onChange={(e) => setW(Number(e.target.value || 1))}
+          />
+          <Input
+            type="number"
+            value={h}
+            onChange={(e) => setH(Number(e.target.value || 1))}
+          />
+        </div>
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-resized.png`,
+            )
+          }
+        >
+          Download Resized Image
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to start resizing."
+        />
+        <ImagePreviewPanel
+          title="Resized Preview"
+          src={result}
+          emptyText="Resized output preview will appear here."
         />
       </div>
-      <Button onClick={run} disabled={!img}>
-        Resize & Download
-      </Button>
-    </Card>
+    </div>
   );
 }
 
 function ImageCompressor() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [quality, setQuality] = useState(0.8);
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1055,38 +1168,59 @@ function ImageCompressor() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0);
-    downloadDataUrl(
-      canvas.toDataURL("image/jpeg", quality),
-      `compressed-${img.fileName}.jpg`,
-    );
+    setResult(canvas.toDataURL("image/jpeg", quality));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <label className="text-sm">Quality: {quality.toFixed(2)}</label>
-      <Input
-        type="range"
-        min={0.1}
-        max={1}
-        step={0.05}
-        value={quality}
-        onChange={(e) => setQuality(Number(e.target.value))}
-      />
-      <Button onClick={run} disabled={!img}>
-        Compress & Download JPG
-      </Button>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Compress</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <label className="text-sm">Quality: {quality.toFixed(2)}</label>
+        <Input
+          type="range"
+          min={0.1}
+          max={1}
+          step={0.05}
+          value={quality}
+          onChange={(e) => setQuality(Number(e.target.value))}
+        />
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-compressed.jpg`,
+            )
+          }
+        >
+          Download Compressed JPG
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to preview compression."
+        />
+        <ImagePreviewPanel
+          title="Compressed Preview"
+          src={result}
+          emptyText="Compressed output preview will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
@@ -1094,6 +1228,7 @@ function ImageCropper() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [cw, setCw] = useState(400);
   const [ch, setCh] = useState(400);
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1113,44 +1248,69 @@ function ImageCropper() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, sx, sy, sw, sh, 0, 0, sw, sh);
-    downloadDataUrl(canvas.toDataURL("image/png"), `crop-${img.fileName}.png`);
+    setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <Input
-          type="number"
-          value={cw}
-          onChange={(e) => setCw(Number(e.target.value || 1))}
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Crop</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
         />
-        <Input
-          type="number"
-          value={ch}
-          onChange={(e) => setCh(Number(e.target.value || 1))}
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            value={cw}
+            onChange={(e) => setCw(Number(e.target.value || 1))}
+          />
+          <Input
+            type="number"
+            value={ch}
+            onChange={(e) => setCh(Number(e.target.value || 1))}
+          />
+        </div>
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-cropped.png`,
+            )
+          }
+        >
+          Download Cropped Image
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to preview crop."
+        />
+        <ImagePreviewPanel
+          title="Cropped Preview"
+          src={result}
+          emptyText="Cropped output preview will appear here."
         />
       </div>
-      <Button onClick={run} disabled={!img}>
-        Center Crop & Download
-      </Button>
-    </Card>
+    </div>
   );
 }
 
 function ImageFormatConverter() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [format, setFormat] = useState("image/png");
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1166,45 +1326,67 @@ function ImageFormatConverter() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0);
-    const ext = format.split("/")[1];
-    downloadDataUrl(
-      canvas.toDataURL(format),
-      `converted-${img.fileName}.${ext}`,
-    );
+    setResult(canvas.toDataURL(format));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <select
-        className="h-10 rounded-md border bg-background px-3"
-        value={format}
-        onChange={(e) => setFormat(e.target.value)}
-      >
-        <option value="image/png">PNG</option>
-        <option value="image/jpeg">JPG</option>
-        <option value="image/webp">WEBP</option>
-      </select>
-      <Button onClick={run} disabled={!img}>
-        Convert & Download
-      </Button>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Convert</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <select
+          className="h-10 rounded-md border bg-background px-3"
+          value={format}
+          onChange={(e) => setFormat(e.target.value)}
+        >
+          <option value="image/png">PNG</option>
+          <option value="image/jpeg">JPG</option>
+          <option value="image/webp">WEBP</option>
+        </select>
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() => {
+            const ext = format.split("/")[1];
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-converted.${ext}`,
+            );
+          }}
+        >
+          Download Converted Image
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to preview conversion."
+        />
+        <ImagePreviewPanel
+          title="Converted Preview"
+          src={result}
+          emptyText="Converted output preview will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
 function BackgroundRemover() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [threshold, setThreshold] = useState(35);
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1249,43 +1431,65 @@ function BackgroundRemover() {
       if (dist < threshold) d[i + 3] = 0;
     }
     ctx.putImageData(id, 0, 0);
-    downloadDataUrl(
-      canvas.toDataURL("image/png"),
-      `bg-removed-${img.fileName}.png`,
-    );
+    setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <label className="text-sm">Threshold: {threshold}</label>
-      <Input
-        type="range"
-        min={5}
-        max={120}
-        value={threshold}
-        onChange={(e) => setThreshold(Number(e.target.value))}
-      />
-      <Button onClick={run} disabled={!img}>
-        Remove Background (solid-bg)
-      </Button>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Remove Background</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <label className="text-sm">Threshold: {threshold}</label>
+        <Input
+          type="range"
+          min={5}
+          max={120}
+          value={threshold}
+          onChange={(e) => setThreshold(Number(e.target.value))}
+        />
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-bg-removed.png`,
+            )
+          }
+        >
+          Download PNG
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to preview background removal."
+        />
+        <ImagePreviewPanel
+          title="Background Removed"
+          src={result}
+          emptyText="Processed image will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
 function ImageWatermark() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [text, setText] = useState("Dev Toolbox");
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1308,60 +1512,111 @@ function ImageWatermark() {
     const y = canvas.height - 20;
     ctx.strokeText(text, x, y);
     ctx.fillText(text, x, y);
-    downloadDataUrl(
-      canvas.toDataURL("image/png"),
-      `watermarked-${img.fileName}.png`,
-    );
+    setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <Input
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Watermark text"
-      />
-      <Button onClick={run} disabled={!img}>
-        Apply Watermark
-      </Button>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Watermark</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Watermark text"
+        />
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-watermarked.png`,
+            )
+          }
+        >
+          Download Watermarked Image
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to preview watermark."
+        />
+        <ImagePreviewPanel
+          title="Watermarked Preview"
+          src={result}
+          emptyText="Watermarked image preview will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
 function ImageToBase64() {
+  const [img, setImg] = useState<ImageState | null>(null);
   const [out, setOut] = useState("");
+  const [result, setResult] = useState("");
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          if (!f) return;
-          const buf = await f.arrayBuffer();
-          const bytes = new Uint8Array(buf);
-          let binary = "";
-          bytes.forEach((b) => (binary += String.fromCharCode(b)));
-          setOut(`data:${f.type};base64,${btoa(binary)}`);
-        }}
-      />
-      <Textarea
-        value={out}
-        onChange={(e) => setOut(e.target.value)}
-        className="h-72 font-mono text-xs"
-      />
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Encode</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const f = files?.[0];
+            if (!f) return;
+            const loaded = await loadImageFromFile(f);
+            setImg(loaded);
+            const buf = await f.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let binary = "";
+            bytes.forEach((b) => (binary += String.fromCharCode(b)));
+            const dataUrl = `data:${f.type};base64,${btoa(binary)}`;
+            setOut(dataUrl);
+            setResult(dataUrl);
+          }}
+        />
+        <Textarea
+          value={out}
+          onChange={(e) => {
+            setOut(e.target.value);
+            setResult(e.target.value);
+          }}
+          className="h-48 font-mono text-xs"
+        />
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() => downloadDataUrl(result, "image-from-base64.png")}
+        >
+          Download Encoded Preview
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to encode to Base64."
+        />
+        <ImagePreviewPanel
+          title="Decoded Preview"
+          src={result}
+          emptyText="Decoded preview will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
@@ -1376,6 +1631,19 @@ function Base64ToImage() {
 
   return (
     <Card className="p-4 space-y-3">
+      <p className="text-sm font-medium">Paste Base64 or Upload Image</p>
+      <StyledFilePicker
+        label="Image file"
+        onSelect={async (files) => {
+          const f = files?.[0];
+          if (!f) return;
+          const buf = await f.arrayBuffer();
+          const bytes = new Uint8Array(buf);
+          let binary = "";
+          bytes.forEach((b) => (binary += String.fromCharCode(b)));
+          setInput(`data:${f.type};base64,${btoa(binary)}`);
+        }}
+      />
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -1435,67 +1703,92 @@ function ColorPaletteExtractor() {
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Extract Palette</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setColors([]);
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <Button onClick={run} disabled={!img}>
+          Extract Palette
+        </Button>
+        <div className="grid grid-cols-2 gap-2">
+          {colors.map((c) => (
+            <button
+              key={c}
+              className="rounded border p-2 text-xs"
+              onClick={() => navigator.clipboard.writeText(c)}
+            >
+              <div className="mb-1 h-8 rounded" style={{ background: c }} />
+              {c}
+            </button>
+          ))}
+        </div>
+      </Card>
+      <ImagePreviewPanel
+        title="Image Preview"
+        src={img?.src}
+        emptyText="Upload an image to extract dominant colors."
       />
-      <Button onClick={run} disabled={!img}>
-        Extract Palette
-      </Button>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {colors.map((c) => (
-          <button
-            key={c}
-            className="rounded border p-2 text-xs"
-            onClick={() => navigator.clipboard.writeText(c)}
-          >
-            <div className="mb-1 h-8 rounded" style={{ background: c }} />
-            {c}
-          </button>
-        ))}
-      </div>
-    </Card>
+    </div>
   );
 }
 
 function ExifMetadataViewer() {
+  const [imgSrc, setImgSrc] = useState("");
   const [meta, setMeta] = useState<Record<string, string>>({});
 
+  const downloadJson = () => {
+    const blob = new Blob([JSON.stringify(meta, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "image-metadata.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const f = e.target.files?.[0];
-          if (!f) return;
-          const img = await loadImageFromFile(f);
-          setMeta({
-            fileName: f.name,
-            fileType: f.type || "unknown",
-            fileSize: `${(f.size / 1024).toFixed(2)} KB`,
-            width: String(img.width),
-            height: String(img.height),
-            lastModified: new Date(f.lastModified).toLocaleString(),
-          });
-        }}
+    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Inspect Metadata</p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const f = files?.[0];
+            if (!f) return;
+            const loaded = await loadImageFromFile(f);
+            setImgSrc(loaded.src);
+            setMeta({
+              fileName: f.name,
+              fileType: f.type || "unknown",
+              fileSize: `${(f.size / 1024).toFixed(2)} KB`,
+              width: String(loaded.width),
+              height: String(loaded.height),
+              lastModified: new Date(f.lastModified).toLocaleString(),
+            });
+          }}
+        />
+        <pre className="max-h-72 overflow-auto rounded border bg-muted p-3 text-xs">
+          {JSON.stringify(meta, null, 2)}
+        </pre>
+        <Button variant="outline" onClick={downloadJson} disabled={!imgSrc}>
+          Download Metadata JSON
+        </Button>
+      </Card>
+      <ImagePreviewPanel
+        title="Image Preview"
+        src={imgSrc}
+        emptyText="Upload an image to inspect metadata."
       />
-      <pre className="rounded border bg-muted p-3 text-xs">
-        {JSON.stringify(meta, null, 2)}
-      </pre>
-      <p className="text-xs text-muted-foreground">
-        Browser-safe metadata view. Full EXIF varies by image/format and browser
-        capabilities.
-      </p>
-    </Card>
+    </div>
   );
 }
 
@@ -1504,6 +1797,25 @@ function ScreenshotAnnotator() {
   const [drawing, setDrawing] = useState(false);
   const [color, setColor] = useState("#ff0000");
   const [size, setSize] = useState(3);
+
+  const loadToCanvas = async (file?: File) => {
+    if (!file) return;
+    const loaded = await loadImageFromFile(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = loaded.src;
+    });
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -1530,6 +1842,11 @@ function ScreenshotAnnotator() {
 
   return (
     <Card className="p-4 space-y-3">
+      <p className="text-sm font-medium">Upload and Annotate</p>
+      <StyledFilePicker
+        label="Image file"
+        onSelect={(files) => loadToCanvas(files?.[0])}
+      />
       <div className="flex items-center gap-2">
         <Input
           type="color"
@@ -1545,7 +1862,7 @@ function ScreenshotAnnotator() {
           onChange={(e) => setSize(Number(e.target.value))}
         />
         <Button variant="outline" onClick={download}>
-          Download
+          Download Annotated Image
         </Button>
       </div>
       <canvas
@@ -1575,10 +1892,6 @@ function ScreenshotAnnotator() {
           ctx?.beginPath();
         }}
       />
-      <p className="text-xs text-muted-foreground">
-        Tip: paste your screenshot by dragging it into this tool in the next
-        iteration. Current version includes canvas annotation + export.
-      </p>
     </Card>
   );
 }
@@ -1610,33 +1923,59 @@ function BatchImageRenamer() {
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <Input
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-      />
-      <Input
-        value={pattern}
-        onChange={(e) => setPattern(e.target.value)}
-        placeholder="Pattern, e.g. image-{n}"
-      />
-      <Button onClick={downloadCsv} disabled={!mapped.length}>
-        Download Rename Plan (CSV)
-      </Button>
-      <div className="max-h-64 overflow-auto rounded border">
-        {mapped.map((m) => (
-          <div
-            key={m.from}
-            className="grid grid-cols-2 gap-2 border-b p-2 text-xs"
-          >
-            <span className="truncate">{m.from}</span>
-            <span className="truncate text-muted-foreground">{m.to}</span>
-          </div>
-        ))}
-      </div>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Generate Rename Plan</p>
+        <StyledFilePicker
+          label="Image files"
+          multiple
+          onSelect={(files) => setFiles(Array.from(files ?? []))}
+        />
+        <Input
+          value={pattern}
+          onChange={(e) => setPattern(e.target.value)}
+          placeholder="Pattern, e.g. image-{n}"
+        />
+        <Button onClick={downloadCsv} disabled={!mapped.length}>
+          Download Rename Plan (CSV)
+        </Button>
+        <div className="max-h-64 overflow-auto rounded border">
+          {mapped.map((m) => (
+            <div
+              key={m.from}
+              className="grid grid-cols-2 gap-2 border-b p-2 text-xs"
+            >
+              <span className="truncate">{m.from}</span>
+              <span className="truncate text-muted-foreground">{m.to}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-4">
+        <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+          Uploaded Preview
+        </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+          {files.slice(0, 9).map((f) => (
+            <div key={f.name} className="rounded border p-2">
+              <img
+                src={URL.createObjectURL(f)}
+                alt={f.name}
+                className="h-20 w-full rounded object-cover"
+              />
+              <p className="mt-1 truncate text-[10px] text-slate-500">
+                {f.name}
+              </p>
+            </div>
+          ))}
+          {!files.length && (
+            <div className="col-span-full flex h-48 items-center justify-center rounded border border-dashed bg-slate-50 text-sm text-slate-500">
+              Upload images to preview and build a rename plan.
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -1644,6 +1983,7 @@ function ReminiLogoRemover() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [ratio, setRatio] = useState(0.16);
   const [padding, setPadding] = useState(14);
+  const [result, setResult] = useState("");
 
   const run = async () => {
     if (!img) return;
@@ -1672,50 +2012,70 @@ function ReminiLogoRemover() {
 
     ctx.fillStyle = "rgba(255,255,255,0.18)";
     ctx.fillRect(x, y, rw, rh);
-
-    downloadDataUrl(
-      canvas.toDataURL("image/png"),
-      `${stripExtension(img.fileName)}-logo-clean.png`,
-    );
+    setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Use this only on images you own or have rights to edit.
-      </p>
-      <Input
-        type="file"
-        accept="image/*"
-        onChange={async (e) =>
-          setImg(
-            e.target.files?.[0]
-              ? await loadImageFromFile(e.target.files[0])
-              : null,
-          )
-        }
-      />
-      <label className="text-sm">Logo Width Ratio: {ratio.toFixed(2)}</label>
-      <Input
-        type="range"
-        min={0.08}
-        max={0.3}
-        step={0.01}
-        value={ratio}
-        onChange={(e) => setRatio(Number(e.target.value))}
-      />
-      <label className="text-sm">Padding: {padding}px</label>
-      <Input
-        type="range"
-        min={0}
-        max={40}
-        value={padding}
-        onChange={(e) => setPadding(Number(e.target.value))}
-      />
-      <Button onClick={run} disabled={!img}>
-        Clean Bottom-Right Logo
-      </Button>
-    </Card>
+    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium">Upload and Clean Logo Area</p>
+        <p className="text-xs text-muted-foreground">
+          Use this only on images you own or have rights to edit.
+        </p>
+        <StyledFilePicker
+          label="Image file"
+          onSelect={async (files) => {
+            const file = files?.[0];
+            setResult("");
+            setImg(file ? await loadImageFromFile(file) : null);
+          }}
+        />
+        <label className="text-sm">Logo Width Ratio: {ratio.toFixed(2)}</label>
+        <Input
+          type="range"
+          min={0.08}
+          max={0.3}
+          step={0.01}
+          value={ratio}
+          onChange={(e) => setRatio(Number(e.target.value))}
+        />
+        <label className="text-sm">Padding: {padding}px</label>
+        <Input
+          type="range"
+          min={0}
+          max={40}
+          value={padding}
+          onChange={(e) => setPadding(Number(e.target.value))}
+        />
+        <Button onClick={run} disabled={!img}>
+          Generate Preview
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!result}
+          onClick={() =>
+            downloadDataUrl(
+              result,
+              `${stripExtension(img?.fileName || "image")}-logo-clean.png`,
+            )
+          }
+        >
+          Download Clean Image
+        </Button>
+      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ImagePreviewPanel
+          title="Original"
+          src={img?.src}
+          emptyText="Upload an image to clean logo area."
+        />
+        <ImagePreviewPanel
+          title="Cleaned Preview"
+          src={result}
+          emptyText="Result preview will appear here."
+        />
+      </div>
+    </div>
   );
 }
 
