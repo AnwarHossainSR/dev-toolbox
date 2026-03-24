@@ -146,23 +146,39 @@ function ImageToolDesignWrapper({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-4">
-      <Card className={IMAGE_TOOL_CARD_CLASS}>
-        <div className="pointer-events-none absolute -top-20 -right-20 h-52 w-52 rounded-full bg-cyan-200/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full bg-sky-300/30 blur-3xl" />
-        <div className="relative p-5">
-          <p className="text-xs uppercase tracking-[0.24em] text-sky-700/80">
-            Image Lab
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-slate-900">
-            {slugTitle(slug)}
-          </h3>
-          <p className="mt-1 text-sm text-slate-600">
-            Fast browser-side processing with a cleaner workspace and better
-            visual controls.
-          </p>
+    <div className="space-y-5">
+      <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-linear-to-r from-sky-50 via-white to-cyan-50 px-6 py-5 shadow-sm">
+        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-sky-400/20 blur-3xl" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-cyan-500 text-white shadow">
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-sky-600">
+              Image Lab
+            </p>
+            <h3 className="text-base font-bold text-slate-900">
+              {slugTitle(slug)}
+            </h3>
+          </div>
+          <div className="ml-auto hidden sm:flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-medium text-sky-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400"></span>
+            Browser-side · Private
+          </div>
         </div>
-      </Card>
+      </div>
       {children}
     </div>
   );
@@ -180,48 +196,105 @@ function StyledFilePicker({
   multiple?: boolean;
 }) {
   const id = useId();
-  const [selected, setSelected] = useState("No file selected");
+  const [selected, setSelected] = useState<string | null>(null);
+  const [draggingOver, setDraggingOver] = useState(false);
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || !files.length) {
+      setSelected(null);
+      onSelect(files);
+      return;
+    }
+    const names = Array.from(files)
+      .slice(0, 2)
+      .map((f) => f.name)
+      .join(", ");
+    setSelected(
+      files.length > 2 ? `${names} +${files.length - 2} more` : names,
+    );
+    onSelect(files);
+  };
 
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-        {label}
+    <div className="space-y-1.5">
+      {label && (
+        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          {label}
+        </label>
+      )}
+      <label
+        htmlFor={id}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDraggingOver(true);
+        }}
+        onDragLeave={() => setDraggingOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDraggingOver(false);
+          handleFiles(e.dataTransfer.files);
+        }}
+        className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all ${
+          draggingOver
+            ? "border-sky-400 bg-sky-50 scale-[1.01]"
+            : selected
+              ? "border-sky-300 bg-sky-50/60"
+              : "border-slate-200 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50"
+        }`}
+      >
+        {selected ? (
+          <>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="#0284c7"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4M12 3v12m0 0-4-4m4 4 4-4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-sky-700 line-clamp-1 max-w-50">
+                {selected}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Click to replace
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+              <svg
+                width="20"
+                height="20"
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-600">
+                Drop image here
+              </p>
+              <p className="text-[10px] text-slate-400">or click to browse</p>
+            </div>
+          </>
+        )}
       </label>
-      <div className="rounded-xl border border-sky-200 bg-linear-to-br from-white to-sky-50 p-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <label
-            htmlFor={id}
-            className="inline-flex cursor-pointer items-center rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
-          >
-            Choose File
-          </label>
-          <span className="line-clamp-1 text-xs text-slate-600">
-            {selected}
-          </span>
-        </div>
-      </div>
       <Input
         id={id}
         type="file"
         accept={accept}
         multiple={multiple}
         className="sr-only"
-        onChange={(e) => {
-          const files = e.target.files;
-          if (!files || !files.length) {
-            setSelected("No file selected");
-            onSelect(files);
-            return;
-          }
-          const names = Array.from(files)
-            .slice(0, 2)
-            .map((f) => f.name)
-            .join(", ");
-          setSelected(
-            files.length > 2 ? `${names} +${files.length - 2} more` : names,
-          );
-          onSelect(files);
-        }}
+        onChange={(e) => handleFiles(e.target.files)}
       />
     </div>
   );
@@ -1040,28 +1113,126 @@ function ImagePreviewPanel({
   title,
   src,
   emptyText,
+  badge,
 }: {
   title: string;
   src?: string;
   emptyText: string;
+  badge?: string;
 }) {
   return (
-    <Card className="p-4">
-      <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-        {title}
-      </p>
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${src ? "bg-green-400" : "bg-slate-300"}`}
+          />
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {title}
+          </p>
+        </div>
+        {badge && (
+          <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+            {badge}
+          </span>
+        )}
+      </div>
       {src ? (
-        <img
-          src={src}
-          alt={title}
-          className="h-72 w-full rounded-md border bg-white object-contain"
-        />
+        <div className="flex flex-1 items-center justify-center bg-size-[20px_20px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%),linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%)] bg-position-[0_0,10px_10px] p-3">
+          <img
+            src={src}
+            alt={title}
+            className="max-h-80 w-full rounded-lg object-contain drop-shadow-sm"
+          />
+        </div>
       ) : (
-        <div className="flex h-72 items-center justify-center rounded-md border border-dashed bg-slate-50 px-4 text-center text-sm text-slate-500">
-          {emptyText}
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+            <svg
+              width="22"
+              height="22"
+              fill="none"
+              stroke="#cbd5e1"
+              strokeWidth="1.5"
+              viewBox="0 0 24 24"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </div>
+          <p className="text-sm text-slate-400">{emptyText}</p>
         </div>
       )}
-    </Card>
+    </div>
+  );
+}
+
+/* ─── Shared image tool layout ─────────────────────────────────────────────── */
+function ImageToolLayout({
+  controls,
+  previews,
+}: {
+  controls: React.ReactNode;
+  previews: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+      {/* Controls sidebar — scrollable, fixed width on large screens */}
+      <div className="w-full shrink-0 lg:w-90 xl:w-100">
+        <div className="sticky top-4 max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="space-y-4 p-5">{controls}</div>
+        </div>
+      </div>
+      {/* Preview area — stacked vertically */}
+      <div className="flex min-w-0 flex-1 flex-col gap-4">{previews}</div>
+    </div>
+  );
+}
+
+function SliderControl({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  display,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (v: number) => void;
+  display?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-slate-600">{label}</label>
+        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700">
+          {display ?? value}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-sky-500"
+      />
+    </div>
+  );
+}
+
+function ControlLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+      {children}
+    </p>
   );
 }
 
@@ -1098,54 +1269,72 @@ function ImageResizer() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Resize</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={(files) => onFile(files?.[0])}
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            value={w}
-            onChange={(e) => setW(Number(e.target.value || 1))}
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker label="" onSelect={(files) => onFile(files?.[0])} />
+          <ControlLabel>Dimensions</ControlLabel>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Width (px)</label>
+              <Input
+                type="number"
+                value={w}
+                onChange={(e) => setW(Number(e.target.value || 1))}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Height (px)</label>
+              <Input
+                type="number"
+                value={h}
+                onChange={(e) => setH(Number(e.target.value || 1))}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+          {img && (
+            <p className="text-[10px] text-slate-400">
+              Original: {img.width} × {img.height}px
+            </p>
+          )}
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-resized.png`,
+              )
+            }
+          >
+            ↓ Download Resized Image
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to start resizing."
+            badge={img ? `${img.width}×${img.height}` : undefined}
           />
-          <Input
-            type="number"
-            value={h}
-            onChange={(e) => setH(Number(e.target.value || 1))}
+          <ImagePreviewPanel
+            title="Resized Preview"
+            src={result}
+            emptyText="Hit Generate Preview to see the result here."
+            badge={result ? `${w}×${h}` : undefined}
           />
-        </div>
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-resized.png`,
-            )
-          }
-        >
-          Download Resized Image
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to start resizing."
-        />
-        <ImagePreviewPanel
-          title="Resized Preview"
-          src={result}
-          emptyText="Resized output preview will appear here."
-        />
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }
 
@@ -1172,55 +1361,62 @@ function ImageCompressor() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Compress</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <label className="text-sm">Quality: {quality.toFixed(2)}</label>
-        <Input
-          type="range"
-          min={0.1}
-          max={1}
-          step={0.05}
-          value={quality}
-          onChange={(e) => setQuality(Number(e.target.value))}
-        />
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-compressed.jpg`,
-            )
-          }
-        >
-          Download Compressed JPG
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to preview compression."
-        />
-        <ImagePreviewPanel
-          title="Compressed Preview"
-          src={result}
-          emptyText="Compressed output preview will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <ControlLabel>Settings</ControlLabel>
+          <SliderControl
+            label="JPEG Quality"
+            value={quality}
+            min={0.1}
+            max={1}
+            step={0.05}
+            onChange={setQuality}
+            display={`${Math.round(quality * 100)}%`}
+          />
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-compressed.jpg`,
+              )
+            }
+          >
+            &darr; Download Compressed JPG
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to preview compression."
+            badge={img ? `${img.width}×${img.height}` : undefined}
+          />
+          <ImagePreviewPanel
+            title="Compressed Preview"
+            src={result}
+            emptyText="Hit Generate Preview to see the result here."
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1252,58 +1448,79 @@ function ImageCropper() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Crop</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            value={cw}
-            onChange={(e) => setCw(Number(e.target.value || 1))}
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
           />
-          <Input
-            type="number"
-            value={ch}
-            onChange={(e) => setCh(Number(e.target.value || 1))}
+          <ControlLabel>Crop Size</ControlLabel>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Width (px)</label>
+              <Input
+                type="number"
+                value={cw}
+                onChange={(e) => setCw(Number(e.target.value || 1))}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Height (px)</label>
+              <Input
+                type="number"
+                value={ch}
+                onChange={(e) => setCh(Number(e.target.value || 1))}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+          {img && (
+            <p className="text-[10px] text-slate-400">
+              Original: {img.width} × {img.height}px — crops from center
+            </p>
+          )}
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-cropped.png`,
+              )
+            }
+          >
+            &darr; Download Cropped Image
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to preview crop."
+            badge={img ? `${img.width}×${img.height}` : undefined}
           />
-        </div>
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-cropped.png`,
-            )
-          }
-        >
-          Download Cropped Image
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to preview crop."
-        />
-        <ImagePreviewPanel
-          title="Cropped Preview"
-          src={result}
-          emptyText="Cropped output preview will appear here."
-        />
-      </div>
-    </div>
+          <ImagePreviewPanel
+            title="Cropped Preview"
+            src={result}
+            emptyText="Hit Generate Preview to see the cropped result."
+            badge={result ? `${cw}×${ch}` : undefined}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1330,56 +1547,64 @@ function ImageFormatConverter() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Convert</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <select
-          className="h-10 rounded-md border bg-background px-3"
-          value={format}
-          onChange={(e) => setFormat(e.target.value)}
-        >
-          <option value="image/png">PNG</option>
-          <option value="image/jpeg">JPG</option>
-          <option value="image/webp">WEBP</option>
-        </select>
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() => {
-            const ext = format.split("/")[1];
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-converted.${ext}`,
-            );
-          }}
-        >
-          Download Converted Image
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to preview conversion."
-        />
-        <ImagePreviewPanel
-          title="Converted Preview"
-          src={result}
-          emptyText="Converted output preview will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <ControlLabel>Output Format</ControlLabel>
+          <select
+            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+          >
+            <option value="image/png">PNG — lossless</option>
+            <option value="image/jpeg">JPG — smaller file</option>
+            <option value="image/webp">WEBP — modern, compact</option>
+          </select>
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() => {
+              const ext = format.split("/")[1];
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-converted.${ext}`,
+              );
+            }}
+          >
+            &darr; Download Converted Image
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to preview conversion."
+            badge={img ? img.fileName : undefined}
+          />
+          <ImagePreviewPanel
+            title="Converted Preview"
+            src={result}
+            emptyText="Hit Generate Preview to see the converted result."
+            badge={result ? format.split("/")[1].toUpperCase() : undefined}
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1435,54 +1660,64 @@ function BackgroundRemover() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Remove Background</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <label className="text-sm">Threshold: {threshold}</label>
-        <Input
-          type="range"
-          min={5}
-          max={120}
-          value={threshold}
-          onChange={(e) => setThreshold(Number(e.target.value))}
-        />
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-bg-removed.png`,
-            )
-          }
-        >
-          Download PNG
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to preview background removal."
-        />
-        <ImagePreviewPanel
-          title="Background Removed"
-          src={result}
-          emptyText="Processed image will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <ControlLabel>Settings</ControlLabel>
+          <SliderControl
+            label="Color Tolerance"
+            value={threshold}
+            min={5}
+            max={120}
+            onChange={setThreshold}
+          />
+          <p className="text-[10px] text-slate-400">
+            Higher tolerance removes more background pixels. Works best on
+            solid-color backgrounds.
+          </p>
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-bg-removed.png`,
+              )
+            }
+          >
+            &darr; Download PNG
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to preview background removal."
+            badge={img ? `${img.width}×${img.height}` : undefined}
+          />
+          <ImagePreviewPanel
+            title="Background Removed"
+            src={result}
+            emptyText="Processed image will appear here (transparent PNG)."
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1490,6 +1725,49 @@ function ImageWatermark() {
   const [img, setImg] = useState<ImageState | null>(null);
   const [text, setText] = useState("Dev Toolbox");
   const [result, setResult] = useState("");
+  const [fontFamily, setFontFamily] = useState("Arial");
+  const [fontSize, setFontSize] = useState(42);
+  const [fontWeight, setFontWeight] = useState("700");
+  const [italic, setItalic] = useState(false);
+  const [color, setColor] = useState("#ffffff");
+  const [opacity, setOpacity] = useState(0.75);
+  const [strokeColor, setStrokeColor] = useState("#000000");
+  const [strokeWidth, setStrokeWidth] = useState(2);
+  const [rotation, setRotation] = useState(0);
+  const [xPct, setXPct] = useState(0.82);
+  const [yPct, setYPct] = useState(0.88);
+  const [dragging, setDragging] = useState(false);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+
+  const updatePosition = (clientX: number, clientY: number) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+    setXPct(px);
+    setYPct(py);
+  };
+
+  const presetPosition = (
+    preset:
+      | "top-left"
+      | "top-right"
+      | "center"
+      | "bottom-left"
+      | "bottom-right",
+  ) => {
+    const map: Record<string, [number, number]> = {
+      "top-left": [0.2, 0.16],
+      "top-right": [0.8, 0.16],
+      center: [0.5, 0.5],
+      "bottom-left": [0.2, 0.88],
+      "bottom-right": [0.82, 0.88],
+    };
+    const [px, py] = map[preset];
+    setXPct(px);
+    setYPct(py);
+  };
 
   const run = async () => {
     if (!img) return;
@@ -1505,62 +1783,271 @@ function ImageWatermark() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0);
-    ctx.font = `${Math.max(16, Math.floor(canvas.width / 20))}px sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,0.7)";
-    ctx.strokeStyle = "rgba(0,0,0,0.35)";
-    const x = canvas.width - ctx.measureText(text).width - 20;
-    const y = canvas.height - 20;
-    ctx.strokeText(text, x, y);
-    ctx.fillText(text, x, y);
+    ctx.save();
+    ctx.font = `${italic ? "italic" : "normal"} ${fontWeight} ${fontSize}px ${fontFamily}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.translate(canvas.width * xPct, canvas.height * yPct);
+    ctx.rotate((rotation * Math.PI) / 180);
+    if (strokeWidth > 0) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.strokeText(text, 0, 0);
+    }
+    ctx.fillStyle = color;
+    ctx.globalAlpha = opacity;
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
     setResult(canvas.toDataURL("image/png"));
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Watermark</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <Input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Watermark text"
-        />
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-watermarked.png`,
-            )
-          }
-        >
-          Download Watermarked Image
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to preview watermark."
-        />
-        <ImagePreviewPanel
-          title="Watermarked Preview"
-          src={result}
-          emptyText="Watermarked image preview will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <ControlLabel>Watermark Text</ControlLabel>
+          <Input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Your watermark text"
+            className="h-9"
+          />
+          <ControlLabel>Typography</ControlLabel>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Font Family</label>
+              <select
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm"
+                value={fontFamily}
+                onChange={(e) => setFontFamily(e.target.value)}
+              >
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Times New Roman">Times New Roman</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Weight</label>
+              <select
+                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm"
+                value={fontWeight}
+                onChange={(e) => setFontWeight(e.target.value)}
+              >
+                <option value="400">Regular</option>
+                <option value="600">Semi Bold</option>
+                <option value="700">Bold</option>
+                <option value="800">Extra Bold</option>
+              </select>
+            </div>
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs">
+            <input
+              type="checkbox"
+              checked={italic}
+              onChange={(e) => setItalic(e.target.checked)}
+              className="accent-sky-500"
+            />
+            <span className="text-slate-600">Italic</span>
+          </label>
+          <SliderControl
+            label="Font Size"
+            value={fontSize}
+            min={16}
+            max={140}
+            onChange={setFontSize}
+            display={`${fontSize}px`}
+          />
+          <SliderControl
+            label="Opacity"
+            value={opacity}
+            min={0.1}
+            max={1}
+            step={0.05}
+            onChange={setOpacity}
+            display={`${Math.round(opacity * 100)}%`}
+          />
+          <SliderControl
+            label="Rotation"
+            value={rotation}
+            min={-45}
+            max={45}
+            onChange={setRotation}
+            display={`${rotation}°`}
+          />
+          <SliderControl
+            label="Stroke Width"
+            value={strokeWidth}
+            min={0}
+            max={8}
+            onChange={setStrokeWidth}
+            display={`${strokeWidth}px`}
+          />
+          <ControlLabel>Colors</ControlLabel>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Text Color</label>
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                />
+                <span className="font-mono text-xs text-slate-600">
+                  {color}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-slate-500">Stroke Color</label>
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
+                <input
+                  type="color"
+                  value={strokeColor}
+                  onChange={(e) => setStrokeColor(e.target.value)}
+                  className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                />
+                <span className="font-mono text-xs text-slate-600">
+                  {strokeColor}
+                </span>
+              </div>
+            </div>
+          </div>
+          <ControlLabel>Quick Position</ControlLabel>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(
+              [
+                "top-left",
+                "center",
+                "top-right",
+                "bottom-left",
+                "",
+                "bottom-right",
+              ] as const
+            ).map((p, i) =>
+              p ? (
+                <Button
+                  key={p}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7"
+                  onClick={() => presetPosition(p)}
+                >
+                  {p.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </Button>
+              ) : (
+                <div key={i} />
+              ),
+            )}
+          </div>
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Export
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-watermarked.png`,
+              )
+            }
+          >
+            &darr; Download Watermarked Image
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to preview watermark."
+          />
+          <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`h-2 w-2 rounded-full ${img?.src ? "bg-sky-400" : "bg-slate-300"}`}
+                />
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Live Placement
+                </p>
+              </div>
+              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+                Drag to reposition
+              </span>
+            </div>
+            <div
+              ref={stageRef}
+              className="relative flex-1 overflow-hidden bg-size-[20px_20px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%),linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%)] bg-position-[0_0,10px_10px] cursor-crosshair"
+              style={{ minHeight: "320px" }}
+              onMouseDown={(e) => {
+                setDragging(true);
+                updatePosition(e.clientX, e.clientY);
+              }}
+              onMouseMove={(e) => {
+                if (!dragging) return;
+                updatePosition(e.clientX, e.clientY);
+              }}
+              onMouseUp={() => setDragging(false)}
+              onMouseLeave={() => setDragging(false)}
+            >
+              {img?.src ? (
+                <>
+                  <img
+                    src={img.src}
+                    alt="watermark-stage"
+                    className="h-full w-full object-contain"
+                  />
+                  <span
+                    style={{
+                      left: `${xPct * 100}%`,
+                      top: `${yPct * 100}%`,
+                      color,
+                      opacity,
+                      transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                      fontFamily,
+                      fontWeight,
+                      fontSize: `${Math.max(12, Math.round((fontSize / 140) * 38))}px`,
+                      fontStyle: italic ? "italic" : "normal",
+                      textShadow:
+                        strokeWidth > 0
+                          ? `${strokeWidth}px 0 ${strokeColor}, -${strokeWidth}px 0 ${strokeColor}, 0 ${strokeWidth}px ${strokeColor}, 0 -${strokeWidth}px ${strokeColor}`
+                          : "none",
+                    }}
+                    className="pointer-events-none absolute select-none whitespace-nowrap drop-shadow"
+                  >
+                    {text || "Watermark"}
+                  </span>
+                </>
+              ) : (
+                <div className="flex h-full min-h-80 items-center justify-center text-sm text-slate-400">
+                  Upload an image to place watermark text.
+                </div>
+              )}
+            </div>
+          </div>
+          <ImagePreviewPanel
+            title="Final Watermarked Output"
+            src={result}
+            emptyText="Click Generate Export to produce the final watermarked image."
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1569,54 +2056,62 @@ function ImageToBase64() {
   const [out, setOut] = useState("");
   const [result, setResult] = useState("");
   return (
-    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Encode</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const f = files?.[0];
-            if (!f) return;
-            const loaded = await loadImageFromFile(f);
-            setImg(loaded);
-            const buf = await f.arrayBuffer();
-            const bytes = new Uint8Array(buf);
-            let binary = "";
-            bytes.forEach((b) => (binary += String.fromCharCode(b)));
-            const dataUrl = `data:${f.type};base64,${btoa(binary)}`;
-            setOut(dataUrl);
-            setResult(dataUrl);
-          }}
-        />
-        <Textarea
-          value={out}
-          onChange={(e) => {
-            setOut(e.target.value);
-            setResult(e.target.value);
-          }}
-          className="h-48 font-mono text-xs"
-        />
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() => downloadDataUrl(result, "image-from-base64.png")}
-        >
-          Download Encoded Preview
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to encode to Base64."
-        />
-        <ImagePreviewPanel
-          title="Decoded Preview"
-          src={result}
-          emptyText="Decoded preview will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const f = files?.[0];
+              if (!f) return;
+              const loaded = await loadImageFromFile(f);
+              setImg(loaded);
+              const buf = await f.arrayBuffer();
+              const bytes = new Uint8Array(buf);
+              let binary = "";
+              bytes.forEach((b) => (binary += String.fromCharCode(b)));
+              const dataUrl = `data:${f.type};base64,${btoa(binary)}`;
+              setOut(dataUrl);
+              setResult(dataUrl);
+            }}
+          />
+          <ControlLabel>Base64 Output</ControlLabel>
+          <Textarea
+            value={out}
+            onChange={(e) => {
+              setOut(e.target.value);
+              setResult(e.target.value);
+            }}
+            className="h-40 font-mono text-xs"
+            placeholder="Base64 data URI will appear here after uploading"
+          />
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() => downloadDataUrl(result, "image-from-base64.png")}
+          >
+            &darr; Download
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to encode to Base64."
+            badge={img ? img.fileName : undefined}
+          />
+          <ImagePreviewPanel
+            title="Decoded Preview"
+            src={result}
+            emptyText="Decoded preview will appear here."
+          />
+        </>
+      }
+    />
   );
 }
 
@@ -1630,39 +2125,46 @@ function Base64ToImage() {
   }, [input]);
 
   return (
-    <Card className="p-4 space-y-3">
-      <p className="text-sm font-medium">Paste Base64 or Upload Image</p>
-      <StyledFilePicker
-        label="Image file"
-        onSelect={async (files) => {
-          const f = files?.[0];
-          if (!f) return;
-          const buf = await f.arrayBuffer();
-          const bytes = new Uint8Array(buf);
-          let binary = "";
-          bytes.forEach((b) => (binary += String.fromCharCode(b)));
-          setInput(`data:${f.type};base64,${btoa(binary)}`);
-        }}
-      />
-      <Textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="h-48 font-mono text-xs"
-      />
-      {src && (
-        <img
-          src={src}
-          alt="decoded"
-          className="max-h-80 rounded border object-contain"
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image or Base64</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const f = files?.[0];
+              if (!f) return;
+              const buf = await f.arrayBuffer();
+              const bytes = new Uint8Array(buf);
+              let binary = "";
+              bytes.forEach((b) => (binary += String.fromCharCode(b)));
+              setInput(`data:${f.type};base64,${btoa(binary)}`);
+            }}
+          />
+          <ControlLabel>Base64 Input</ControlLabel>
+          <Textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="h-40 font-mono text-xs"
+            placeholder="Paste a Base64 data URI or raw Base64 string here"
+          />
+          <Button
+            onClick={() => downloadDataUrl(src, "decoded-image.png")}
+            disabled={!src}
+            className="w-full"
+          >
+            &darr; Download Decoded Image
+          </Button>
+        </>
+      }
+      previews={
+        <ImagePreviewPanel
+          title="Decoded Image Preview"
+          src={src || undefined}
+          emptyText="Upload an image or paste a Base64 string to see the decoded image."
         />
-      )}
-      <Button
-        onClick={() => downloadDataUrl(src, "decoded-image.png")}
-        disabled={!src}
-      >
-        Download
-      </Button>
-    </Card>
+      }
+    />
   );
 }
 
@@ -1703,39 +2205,60 @@ function ColorPaletteExtractor() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Extract Palette</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setColors([]);
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setColors([]);
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <Button onClick={run} disabled={!img} className="w-full">
+            Extract Palette
+          </Button>
+          {colors.length > 0 && (
+            <>
+              <ControlLabel>Dominant Colors</ControlLabel>
+              <div className="grid grid-cols-2 gap-2">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    className="group rounded-xl border border-slate-200 p-2 text-xs transition hover:border-sky-300 hover:shadow-sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(c);
+                      toast.success(`Copied ${c}`);
+                    }}
+                  >
+                    <div
+                      className="mb-1.5 h-10 rounded-lg shadow-inner"
+                      style={{ background: c }}
+                    />
+                    <span className="font-mono text-slate-600 group-hover:text-sky-700">
+                      {c}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Click a swatch to copy its hex code.
+              </p>
+            </>
+          )}
+        </>
+      }
+      previews={
+        <ImagePreviewPanel
+          title="Image Preview"
+          src={img?.src}
+          emptyText="Upload an image to extract dominant colors."
+          badge={img ? `${img.width}×${img.height}` : undefined}
         />
-        <Button onClick={run} disabled={!img}>
-          Extract Palette
-        </Button>
-        <div className="grid grid-cols-2 gap-2">
-          {colors.map((c) => (
-            <button
-              key={c}
-              className="rounded border p-2 text-xs"
-              onClick={() => navigator.clipboard.writeText(c)}
-            >
-              <div className="mb-1 h-8 rounded" style={{ background: c }} />
-              {c}
-            </button>
-          ))}
-        </div>
-      </Card>
-      <ImagePreviewPanel
-        title="Image Preview"
-        src={img?.src}
-        emptyText="Upload an image to extract dominant colors."
-      />
-    </div>
+      }
+    />
   );
 }
 
@@ -1756,39 +2279,70 @@ function ExifMetadataViewer() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Inspect Metadata</p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const f = files?.[0];
-            if (!f) return;
-            const loaded = await loadImageFromFile(f);
-            setImgSrc(loaded.src);
-            setMeta({
-              fileName: f.name,
-              fileType: f.type || "unknown",
-              fileSize: `${(f.size / 1024).toFixed(2)} KB`,
-              width: String(loaded.width),
-              height: String(loaded.height),
-              lastModified: new Date(f.lastModified).toLocaleString(),
-            });
-          }}
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const f = files?.[0];
+              if (!f) return;
+              const loaded = await loadImageFromFile(f);
+              setImgSrc(loaded.src);
+              setMeta({
+                fileName: f.name,
+                fileType: f.type || "unknown",
+                fileSize: `${(f.size / 1024).toFixed(2)} KB`,
+                width: String(loaded.width),
+                height: String(loaded.height),
+                lastModified: new Date(f.lastModified).toLocaleString(),
+              });
+            }}
+          />
+          {Object.keys(meta).length > 0 && (
+            <>
+              <ControlLabel>Metadata</ControlLabel>
+              <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                {Object.entries(meta).map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="flex items-start justify-between gap-2 text-xs"
+                  >
+                    <span className="font-semibold text-slate-500 capitalize">
+                      {k}
+                    </span>
+                    <span className="font-mono text-slate-700 text-right break-all">
+                      {v}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <Button
+            variant="outline"
+            onClick={downloadJson}
+            disabled={!imgSrc}
+            className="w-full"
+          >
+            &darr; Download Metadata JSON
+          </Button>
+        </>
+      }
+      previews={
+        <ImagePreviewPanel
+          title="Image Preview"
+          src={imgSrc}
+          emptyText="Upload an image to inspect its metadata."
+          badge={
+            meta.width && meta.height
+              ? `${meta.width}×${meta.height}`
+              : undefined
+          }
         />
-        <pre className="max-h-72 overflow-auto rounded border bg-muted p-3 text-xs">
-          {JSON.stringify(meta, null, 2)}
-        </pre>
-        <Button variant="outline" onClick={downloadJson} disabled={!imgSrc}>
-          Download Metadata JSON
-        </Button>
-      </Card>
-      <ImagePreviewPanel
-        title="Image Preview"
-        src={imgSrc}
-        emptyText="Upload an image to inspect metadata."
-      />
-    </div>
+      }
+    />
   );
 }
 
@@ -1841,58 +2395,88 @@ function ScreenshotAnnotator() {
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <p className="text-sm font-medium">Upload and Annotate</p>
-      <StyledFilePicker
-        label="Image file"
-        onSelect={(files) => loadToCanvas(files?.[0])}
-      />
-      <div className="flex items-center gap-2">
-        <Input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="w-16 p-1"
-        />
-        <Input
-          type="range"
-          min={1}
-          max={12}
-          value={size}
-          onChange={(e) => setSize(Number(e.target.value))}
-        />
-        <Button variant="outline" onClick={download}>
-          Download Annotated Image
-        </Button>
-      </div>
-      <canvas
-        ref={canvasRef}
-        width={900}
-        height={450}
-        className="w-full rounded border bg-white"
-        onMouseDown={(e) => {
-          setDrawing(true);
-          const canvas = canvasRef.current;
-          if (!canvas) return;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return;
-          const rect = canvas.getBoundingClientRect();
-          ctx.beginPath();
-          ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-        }}
-        onMouseMove={draw}
-        onMouseUp={() => {
-          setDrawing(false);
-          const ctx = canvasRef.current?.getContext("2d");
-          ctx?.beginPath();
-        }}
-        onMouseLeave={() => {
-          setDrawing(false);
-          const ctx = canvasRef.current?.getContext("2d");
-          ctx?.beginPath();
-        }}
-      />
-    </Card>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Screenshot</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={(files) => loadToCanvas(files?.[0])}
+          />
+          <ControlLabel>Brush</ControlLabel>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500">Color</label>
+                <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                  />
+                  <span className="font-mono text-xs text-slate-600">
+                    {color}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <SliderControl
+              label="Brush Size"
+              value={size}
+              min={1}
+              max={12}
+              onChange={setSize}
+              display={`${size}px`}
+            />
+          </div>
+          <p className="text-[10px] text-slate-400">
+            Draw directly on the canvas below to annotate.
+          </p>
+          <Button variant="outline" onClick={download} className="w-full">
+            &darr; Download Annotated Image
+          </Button>
+        </>
+      }
+      previews={
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
+            <span className="h-2 w-2 rounded-full bg-orange-400" />
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Annotation Canvas
+            </p>
+          </div>
+          <div className="p-3">
+            <canvas
+              ref={canvasRef}
+              width={900}
+              height={450}
+              className="w-full rounded-lg border border-slate-100 bg-white"
+              onMouseDown={(e) => {
+                setDrawing(true);
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+                const rect = canvas.getBoundingClientRect();
+                ctx.beginPath();
+                ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+              }}
+              onMouseMove={draw}
+              onMouseUp={() => {
+                setDrawing(false);
+                canvasRef.current?.getContext("2d")?.beginPath();
+              }}
+              onMouseLeave={() => {
+                setDrawing(false);
+                canvasRef.current?.getContext("2d")?.beginPath();
+              }}
+              style={{ cursor: "crosshair" }}
+            />
+          </div>
+        </div>
+      }
+    />
   );
 }
 
@@ -1923,59 +2507,123 @@ function BatchImageRenamer() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[420px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Generate Rename Plan</p>
-        <StyledFilePicker
-          label="Image files"
-          multiple
-          onSelect={(files) => setFiles(Array.from(files ?? []))}
-        />
-        <Input
-          value={pattern}
-          onChange={(e) => setPattern(e.target.value)}
-          placeholder="Pattern, e.g. image-{n}"
-        />
-        <Button onClick={downloadCsv} disabled={!mapped.length}>
-          Download Rename Plan (CSV)
-        </Button>
-        <div className="max-h-64 overflow-auto rounded border">
-          {mapped.map((m) => (
-            <div
-              key={m.from}
-              className="grid grid-cols-2 gap-2 border-b p-2 text-xs"
-            >
-              <span className="truncate">{m.from}</span>
-              <span className="truncate text-muted-foreground">{m.to}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
-      <Card className="p-4">
-        <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-          Uploaded Preview
-        </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {files.slice(0, 9).map((f) => (
-            <div key={f.name} className="rounded border p-2">
-              <img
-                src={URL.createObjectURL(f)}
-                alt={f.name}
-                className="h-20 w-full rounded object-cover"
-              />
-              <p className="mt-1 truncate text-[10px] text-slate-500">
-                {f.name}
-              </p>
-            </div>
-          ))}
-          {!files.length && (
-            <div className="col-span-full flex h-48 items-center justify-center rounded border border-dashed bg-slate-50 text-sm text-slate-500">
-              Upload images to preview and build a rename plan.
-            </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Images</ControlLabel>
+          <StyledFilePicker
+            label=""
+            multiple
+            onSelect={(files) => setFiles(Array.from(files ?? []))}
+          />
+          {files.length > 0 && (
+            <p className="text-[10px] text-slate-500">
+              {files.length} file{files.length !== 1 ? "s" : ""} selected
+            </p>
           )}
+          <ControlLabel>Rename Pattern</ControlLabel>
+          <div className="space-y-1.5">
+            <Input
+              value={pattern}
+              onChange={(e) => setPattern(e.target.value)}
+              placeholder="Pattern, e.g. image-{n}"
+              className="h-9"
+            />
+            <p className="text-[10px] text-slate-400">
+              Use {"{"}n{"}"} as the sequential number placeholder.
+            </p>
+          </div>
+          {mapped.length > 0 && (
+            <>
+              <ControlLabel>Rename Plan</ControlLabel>
+              <div className="max-h-52 overflow-auto rounded-xl border border-slate-100 bg-slate-50">
+                {mapped.map((m) => (
+                  <div
+                    key={m.from}
+                    className="grid grid-cols-2 gap-2 border-b border-slate-100 px-3 py-1.5 text-xs last:border-0"
+                  >
+                    <span className="truncate text-slate-500">{m.from}</span>
+                    <span className="truncate font-medium text-slate-700">
+                      {m.to}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <Button
+            onClick={downloadCsv}
+            disabled={!mapped.length}
+            className="w-full"
+          >
+            &darr; Download Rename Plan (CSV)
+          </Button>
+        </>
+      }
+      previews={
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
+            <span
+              className={`h-2 w-2 rounded-full ${files.length ? "bg-green-400" : "bg-slate-300"}`}
+            />
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Image Thumbnails
+            </p>
+            {files.length > 0 && (
+              <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
+                {files.length} files
+              </span>
+            )}
+          </div>
+          <div className="p-4">
+            {files.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {files.slice(0, 12).map((f) => (
+                  <div
+                    key={f.name}
+                    className="group overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2 transition hover:border-sky-200 hover:shadow-sm"
+                  >
+                    <img
+                      src={URL.createObjectURL(f)}
+                      alt={f.name}
+                      className="h-20 w-full rounded-lg object-cover"
+                    />
+                    <p className="mt-1.5 truncate text-[10px] font-medium text-slate-500">
+                      {f.name}
+                    </p>
+                  </div>
+                ))}
+                {files.length > 12 && (
+                  <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+                    +{files.length - 12} more
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    stroke="#cbd5e1"
+                    strokeWidth="1.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="m21 15-5-5L5 21" />
+                  </svg>
+                </div>
+                <p className="text-sm text-slate-400">
+                  Upload images to see thumbnails and build a rename plan.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </Card>
-    </div>
+      }
+    />
   );
 }
 
@@ -2016,66 +2664,73 @@ function ReminiLogoRemover() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[380px_1fr]">
-      <Card className="p-4 space-y-3">
-        <p className="text-sm font-medium">Upload and Clean Logo Area</p>
-        <p className="text-xs text-muted-foreground">
-          Use this only on images you own or have rights to edit.
-        </p>
-        <StyledFilePicker
-          label="Image file"
-          onSelect={async (files) => {
-            const file = files?.[0];
-            setResult("");
-            setImg(file ? await loadImageFromFile(file) : null);
-          }}
-        />
-        <label className="text-sm">Logo Width Ratio: {ratio.toFixed(2)}</label>
-        <Input
-          type="range"
-          min={0.08}
-          max={0.3}
-          step={0.01}
-          value={ratio}
-          onChange={(e) => setRatio(Number(e.target.value))}
-        />
-        <label className="text-sm">Padding: {padding}px</label>
-        <Input
-          type="range"
-          min={0}
-          max={40}
-          value={padding}
-          onChange={(e) => setPadding(Number(e.target.value))}
-        />
-        <Button onClick={run} disabled={!img}>
-          Generate Preview
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!result}
-          onClick={() =>
-            downloadDataUrl(
-              result,
-              `${stripExtension(img?.fileName || "image")}-logo-clean.png`,
-            )
-          }
-        >
-          Download Clean Image
-        </Button>
-      </Card>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ImagePreviewPanel
-          title="Original"
-          src={img?.src}
-          emptyText="Upload an image to clean logo area."
-        />
-        <ImagePreviewPanel
-          title="Cleaned Preview"
-          src={result}
-          emptyText="Result preview will appear here."
-        />
-      </div>
-    </div>
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Image</ControlLabel>
+          <StyledFilePicker
+            label=""
+            onSelect={async (files) => {
+              const file = files?.[0];
+              setResult("");
+              setImg(file ? await loadImageFromFile(file) : null);
+            }}
+          />
+          <p className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+            Use only on images you own or have rights to edit.
+          </p>
+          <ControlLabel>Settings</ControlLabel>
+          <SliderControl
+            label="Logo Width Ratio"
+            value={ratio}
+            min={0.08}
+            max={0.3}
+            step={0.01}
+            onChange={setRatio}
+            display={`${Math.round(ratio * 100)}%`}
+          />
+          <SliderControl
+            label="Edge Padding"
+            value={padding}
+            min={0}
+            max={40}
+            onChange={setPadding}
+            display={`${padding}px`}
+          />
+          <Button onClick={run} disabled={!img} className="w-full">
+            Generate Preview
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(
+                result,
+                `${stripExtension(img?.fileName || "image")}-logo-clean.png`,
+              )
+            }
+          >
+            &darr; Download Clean Image
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <ImagePreviewPanel
+            title="Original"
+            src={img?.src}
+            emptyText="Upload an image to clean logo area."
+            badge={img ? `${img.width}×${img.height}` : undefined}
+          />
+          <ImagePreviewPanel
+            title="Cleaned Preview"
+            src={result}
+            emptyText="Hit Generate Preview to see the result."
+          />
+        </>
+      }
+    />
   );
 }
 

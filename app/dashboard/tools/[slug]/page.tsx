@@ -57,23 +57,25 @@ export default async function ToolPage({
   const isFavorited = favorites.includes(tool.name);
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <span className="text-4xl">{tool.icon}</span>
+    <div className="p-6">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">{tool.icon}</span>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold text-foreground">
                 {tool.name}
               </h1>
-              <p className="text-muted-foreground">{tool.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {tool.description}
+              </p>
             </div>
           </div>
           <FavoriteButton toolName={tool.name} initialFavorited={isFavorited} />
         </div>
       </div>
 
-      <div className="max-w-6xl">
+      <div className="max-w-7xl">
         {tool.isPremium ? (
           <PremiumGate>
             {Component ? <Component /> : <GeneratedTools slug={slug} />}
