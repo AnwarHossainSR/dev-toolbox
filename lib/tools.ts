@@ -359,6 +359,22 @@ export const TOOLS: Tool[] = [
     href: "/dashboard/tools/batch-image-renamer",
     isPremium: true,
   },
+  {
+    name: "AI Image Assistant Gemini",
+    category: "image",
+    description: "Get Gemini-powered image editing tips and settings",
+    icon: "🤖",
+    href: "/dashboard/tools/ai-image-assistant-gemini",
+    isPremium: true,
+  },
+  {
+    name: "Remini Logo Remover",
+    category: "image",
+    description: "Clean bottom-right Remini style logos from owned images",
+    icon: "🧹",
+    href: "/dashboard/tools/remini-logo-remover",
+    isPremium: true,
+  },
 ];
 
 export const TOOL_CATEGORIES = [

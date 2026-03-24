@@ -113,6 +113,158 @@ function slugTitle(slug: string) {
     .join(" ");
 }
 
+const IMAGE_TOOL_SLUGS = new Set([
+  "image-resizer",
+  "image-compressor",
+  "image-cropper",
+  "image-format-converter",
+  "background-remover",
+  "image-watermark",
+  "image-to-base64",
+  "base64-to-image",
+  "color-palette-extractor",
+  "exif-metadata-viewer",
+  "screenshot-annotator",
+  "batch-image-renamer",
+  "remini-logo-remover",
+  "ai-image-assistant-gemini",
+]);
+
+const IMAGE_TOOL_CARD_CLASS =
+  "relative overflow-hidden border-sky-200/70 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-sm";
+
+function stripExtension(name: string) {
+  const idx = name.lastIndexOf(".");
+  return idx > 0 ? name.slice(0, idx) : name;
+}
+
+function ImageToolDesignWrapper({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-4">
+      <Card className={IMAGE_TOOL_CARD_CLASS}>
+        <div className="pointer-events-none absolute -top-20 -right-20 h-52 w-52 rounded-full bg-cyan-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full bg-sky-300/30 blur-3xl" />
+        <div className="relative p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-sky-700/80">
+            Image Lab
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900">
+            {slugTitle(slug)}
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Fast browser-side processing with a cleaner workspace and better
+            visual controls.
+          </p>
+        </div>
+      </Card>
+      {children}
+    </div>
+  );
+}
+
+function GeminiImageAssistant({ slug }: { slug: string }) {
+  const [prompt, setPrompt] = useState(
+    "Suggest optimal settings and steps for this image task.",
+  );
+  const [imageMeta, setImageMeta] = useState<Record<string, string> | null>(
+    null,
+  );
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const askGemini = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/tools/gemini-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toolSlug: slug,
+          prompt,
+          imageMeta,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Gemini request failed");
+        return;
+      }
+      setResponse(data.text || "No suggestions returned.");
+    } catch {
+      toast.error("Could not reach Gemini assistant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className={IMAGE_TOOL_CARD_CLASS}>
+      <div className="p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-sky-700/80">
+              Gemini Copilot
+            </p>
+            <h4 className="text-base font-semibold text-slate-900">
+              AI Image Guidance
+            </h4>
+            <p className="text-sm text-slate-600">
+              Ask Gemini for workflow tips, quality settings, and cleanup
+              strategy before exporting.
+            </p>
+          </div>
+          <div className="rounded-full border border-sky-200 bg-white/90 px-3 py-1 text-xs text-sky-700">
+            Beta
+          </div>
+        </div>
+        <Input
+          type="file"
+          accept="image/*"
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f) {
+              setImageMeta(null);
+              return;
+            }
+            const loaded = await loadImageFromFile(f);
+            setImageMeta({
+              fileName: loaded.fileName,
+              width: String(loaded.width),
+              height: String(loaded.height),
+            });
+          }}
+        />
+        <Textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          className="h-24"
+          placeholder="What should I do to improve this image result?"
+        />
+        <div className="flex items-center gap-2">
+          <Button onClick={askGemini} disabled={loading}>
+            {loading ? "Thinking..." : "Ask Gemini"}
+          </Button>
+          <p className="text-xs text-slate-500">
+            Set GEMINI_API_KEY in env to enable.
+          </p>
+        </div>
+        <Textarea
+          readOnly
+          value={response}
+          className="h-44 bg-white/90 font-mono text-xs"
+          placeholder="Gemini suggestions will appear here"
+        />
+      </div>
+    </Card>
+  );
+}
+
 function JsonCsvConverter() {
   const [jsonInput, setJsonInput] = useState(
     '[{"name":"Alice","age":30},{"name":"Bob","age":27}]',
@@ -1488,6 +1640,85 @@ function BatchImageRenamer() {
   );
 }
 
+function ReminiLogoRemover() {
+  const [img, setImg] = useState<ImageState | null>(null);
+  const [ratio, setRatio] = useState(0.16);
+  const [padding, setPadding] = useState(14);
+
+  const run = async () => {
+    if (!img) return;
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = img.src;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(image, 0, 0);
+
+    const rw = Math.max(24, Math.round(canvas.width * ratio));
+    const rh = Math.max(20, Math.round(canvas.height * 0.09));
+    const x = Math.max(0, canvas.width - rw - padding);
+    const y = Math.max(0, canvas.height - rh - padding);
+
+    const sampleY = Math.max(0, y - rh - 4);
+    const sample = ctx.getImageData(x, sampleY, rw, rh);
+    ctx.putImageData(sample, x, y);
+
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(x, y, rw, rh);
+
+    downloadDataUrl(
+      canvas.toDataURL("image/png"),
+      `${stripExtension(img.fileName)}-logo-clean.png`,
+    );
+  };
+
+  return (
+    <Card className="p-4 space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Use this only on images you own or have rights to edit.
+      </p>
+      <Input
+        type="file"
+        accept="image/*"
+        onChange={async (e) =>
+          setImg(
+            e.target.files?.[0]
+              ? await loadImageFromFile(e.target.files[0])
+              : null,
+          )
+        }
+      />
+      <label className="text-sm">Logo Width Ratio: {ratio.toFixed(2)}</label>
+      <Input
+        type="range"
+        min={0.08}
+        max={0.3}
+        step={0.01}
+        value={ratio}
+        onChange={(e) => setRatio(Number(e.target.value))}
+      />
+      <label className="text-sm">Padding: {padding}px</label>
+      <Input
+        type="range"
+        min={0}
+        max={40}
+        value={padding}
+        onChange={(e) => setPadding(Number(e.target.value))}
+      />
+      <Button onClick={run} disabled={!img}>
+        Clean Bottom-Right Logo
+      </Button>
+    </Card>
+  );
+}
+
 const TOOL_RENDERERS: Record<string, React.ComponentType> = {
   "json-csv-converter": JsonCsvConverter,
   "cron-expression-builder": CronExpressionBuilder,
@@ -1515,6 +1746,10 @@ const TOOL_RENDERERS: Record<string, React.ComponentType> = {
   "exif-metadata-viewer": ExifMetadataViewer,
   "screenshot-annotator": ScreenshotAnnotator,
   "batch-image-renamer": BatchImageRenamer,
+  "remini-logo-remover": ReminiLogoRemover,
+  "ai-image-assistant-gemini": () => (
+    <GeminiImageAssistant slug="ai-image-assistant-gemini" />
+  ),
 };
 
 export function GeneratedTools({ slug }: Props) {
@@ -1529,6 +1764,17 @@ export function GeneratedTools({ slug }: Props) {
           yet.
         </p>
       </Card>
+    );
+  }
+
+  if (IMAGE_TOOL_SLUGS.has(slug)) {
+    return (
+      <ImageToolDesignWrapper slug={slug}>
+        <Comp />
+        {slug !== "ai-image-assistant-gemini" && (
+          <GeminiImageAssistant slug={slug} />
+        )}
+      </ImageToolDesignWrapper>
     );
   }
 
