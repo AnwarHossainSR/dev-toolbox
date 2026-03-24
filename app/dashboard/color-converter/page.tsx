@@ -1,63 +1,67 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ToolLayout } from '@/components'
-import { Input } from '@/components'
-import { Card } from '@/components'
-import { Button } from '@/components'
-import { toast } from 'sonner'
-import { useTrackToolUsage } from '@/hooks/use-track-tool-usage'
+import { ToolLayout } from "@/components/tools/tool-layout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useTrackToolUsage } from "@/hooks/use-track-tool-usage";
+import { useState } from "react";
+import { toast } from "sonner";
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
         r: parseInt(result[1], 16),
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16),
       }
-    : null
+    : null;
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
   return (
-    '#' +
+    "#" +
     [r, g, b]
       .map((x) => {
-        const hex = x.toString(16)
-        return hex.length === 1 ? '0' + hex : hex
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
       })
-      .join('')
+      .join("")
       .toUpperCase()
-  )
+  );
 }
 
 export default function ColorConverterPage() {
-  useTrackToolUsage('Color Converter')
-  const [hex, setHex] = useState('#FF0000')
-  const [r, setR] = useState('255')
-  const [g, setG] = useState('0')
-  const [b, setB] = useState('0')
+  useTrackToolUsage("Color Converter");
+  const [hex, setHex] = useState("#FF0000");
+  const [r, setR] = useState("255");
+  const [g, setG] = useState("0");
+  const [b, setB] = useState("0");
 
   const handleHexChange = (value: string) => {
-    setHex(value)
-    const rgb = hexToRgb(value)
+    setHex(value);
+    const rgb = hexToRgb(value);
     if (rgb) {
-      setR(rgb.r.toString())
-      setG(rgb.g.toString())
-      setB(rgb.b.toString())
+      setR(rgb.r.toString());
+      setG(rgb.g.toString());
+      setB(rgb.b.toString());
     }
-  }
+  };
 
   const handleRgbChange = () => {
-    const newHex = rgbToHex(parseInt(r) || 0, parseInt(g) || 0, parseInt(b) || 0)
-    setHex(newHex)
-  }
+    const newHex = rgbToHex(
+      parseInt(r) || 0,
+      parseInt(g) || 0,
+      parseInt(b) || 0,
+    );
+    setHex(newHex);
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Copied!')
-  }
+    navigator.clipboard.writeText(text);
+    toast.success("Copied!");
+  };
 
   return (
     <ToolLayout
@@ -146,5 +150,6 @@ export default function ColorConverterPage() {
         </div>
       </div>
     </ToolLayout>
-  )
+  );
 }
+
