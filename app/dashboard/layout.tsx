@@ -26,12 +26,16 @@ export default async function DashboardLayout({
 
   const plan = await getUserPlan();
 
+  const userEmail = user.email ?? "";
+  const userName =
+    user.user_metadata?.full_name ?? userEmail.split("@")[0] ?? "User";
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <CommandPalette />
       <Sidebar plan={plan} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
+        <Navbar userName={userName} userEmail={userEmail} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

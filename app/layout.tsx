@@ -1,5 +1,4 @@
 import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
   title: "DevToolbox - Developer Tools",
   description:
     "A collection of powerful developer tools to boost your workflow",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -49,7 +47,6 @@ export default function RootLayout({
           {children}
           <Toaster position="bottom-right" />
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   );
