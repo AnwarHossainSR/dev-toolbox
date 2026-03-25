@@ -1,3 +1,4 @@
+import { NotificationToggles } from "@/components/dashboard/notification-toggles";
 import { createClient } from "@/lib/supabase/server";
 import { Bell, Lock, Settings, User } from "lucide-react";
 
@@ -26,10 +27,27 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         {/* Profile */}
         <section className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-5">
             <User className="h-4 w-4 text-amber-400" />
             <h2 className="text-sm font-semibold text-foreground">Profile</h2>
           </div>
+
+          {/* Avatar row */}
+          <div className="flex items-center gap-4 mb-5 pb-5 border-b border-border">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-400 text-black text-xl font-bold shrink-0 select-none">
+              {(fullName || email).charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {fullName || email.split("@")[0]}
+              </p>
+              <p className="text-xs text-muted-foreground">{email}</p>
+              <span className="inline-flex items-center mt-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground capitalize">
+                {provider}
+              </span>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1.5">
@@ -53,10 +71,6 @@ export default async function SettingsPage() {
                 disabled
                 className="w-full rounded-lg border border-border bg-muted/60 px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Signed in via{" "}
-                <span className="capitalize font-medium">{provider}</span>
-              </p>
             </div>
           </div>
         </section>
@@ -92,31 +106,7 @@ export default async function SettingsPage() {
               Notifications
             </h2>
           </div>
-          <div className="space-y-3">
-            {[
-              { label: "Product updates", sub: "New tools and features" },
-              {
-                label: "Usage reports",
-                sub: "Weekly summary of your activity",
-              },
-            ].map(({ label, sub }) => (
-              <div
-                key={label}
-                className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">{label}</p>
-                  <p className="text-xs text-muted-foreground">{sub}</p>
-                </div>
-                <div className="h-5 w-9 rounded-full bg-amber-400/30 relative cursor-not-allowed">
-                  <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-muted-foreground/40 transition-transform" />
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Notification preferences coming soon.
-          </p>
+          <NotificationToggles />
         </section>
 
         {/* Danger zone */}
