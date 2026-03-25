@@ -18,6 +18,23 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+const IMAGE_TOOL_SLUGS = new Set([
+  "image-resizer",
+  "image-compressor",
+  "image-cropper",
+  "image-format-converter",
+  "background-remover",
+  "image-watermark",
+  "image-to-base64",
+  "base64-to-image",
+  "color-palette-extractor",
+  "exif-metadata-viewer",
+  "screenshot-annotator",
+  "batch-image-renamer",
+  "remini-logo-remover",
+  "ai-image-assistant-gemini",
+]);
+
 const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "json-formatter": JsonFormatter,
   "base64-encoder-decoder": Base64Encoder,
@@ -55,18 +72,29 @@ export default async function ToolPage({
 
   const favorites = await getFavorites();
   const isFavorited = favorites.includes(tool.name);
+  const isImageTool = IMAGE_TOOL_SLUGS.has(slug);
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{tool.icon}</span>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {tool.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
+        <div className="flex items-start justify-between mb-3 gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
+              {tool.icon}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-foreground">
+                  {tool.name}
+                </h1>
+                {isImageTool && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-0.5 text-[11px] font-medium text-green-600 dark:text-green-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    Browser-side · Private
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">
                 {tool.description}
               </p>
             </div>
