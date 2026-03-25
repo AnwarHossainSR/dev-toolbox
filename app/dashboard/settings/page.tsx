@@ -13,7 +13,7 @@ export default async function SettingsPage() {
   const provider = user?.app_metadata?.provider ?? "email";
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-3xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Settings className="h-6 w-6 text-amber-400" />
