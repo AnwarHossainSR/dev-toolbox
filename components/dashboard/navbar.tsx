@@ -1,7 +1,7 @@
 "use client";
 
+import { useTheme } from "@/components/theme-provider";
 import { Bell, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 
 function getGreeting() {
   const hour = new Date().getHours();
