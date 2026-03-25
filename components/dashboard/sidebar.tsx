@@ -10,7 +10,6 @@ import {
   Key,
   LayoutDashboard,
   LogOut,
-  Search,
   Settings,
   Star,
   Zap,
@@ -77,20 +76,6 @@ export function Sidebar({ plan = "free" }: { plan?: Plan }) {
               Personal workspace
             </div>
           </div>
-        </Link>
-      </div>
-
-      {/* Search */}
-      <div className="shrink-0 px-3 pb-3">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 rounded-lg border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Search className="h-3.5 w-3.5 shrink-0" />
-          <span className="flex-1 truncate">Search tools...</span>
-          <kbd className="hidden shrink-0 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium sm:inline-flex">
-            ⌘K
-          </kbd>
         </Link>
       </div>
 
