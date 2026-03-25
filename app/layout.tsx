@@ -1,7 +1,7 @@
 import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   title: "DevToolbox - Developer Tools",
   description:
     "A collection of powerful developer tools to boost your workflow",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -49,7 +48,11 @@ export default function RootLayout({
           {children}
           <Toaster position="bottom-right" />
         </ThemeProvider>
-        <Analytics />
+        <Script
+          src="https://va.vercel-scripts.com/v1/script.debug.js"
+          data-endpoint="/_vercel/insights"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

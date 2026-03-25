@@ -3,52 +3,80 @@
 import Footer from "@/components/public/footer";
 import PublicNavbar from "@/components/public/navbar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, Code2, Gauge, Lock, Palette } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Code2,
+  Image as ImageIcon,
+  Palette,
+  Shield,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
+
+const stats = [
+  { value: "45", label: "Total Tools" },
+  { value: "22", label: "Free Tools" },
+  { value: "100%", label: "Browser-side" },
+  { value: "0ms", label: "Server Round-trip" },
+];
 
 const features = [
   {
     icon: Code2,
-    title: "Developer Tools",
+    title: "Developer tools",
     description:
-      "Essential tools for coding including JSON formatter, regex tester, JWT decoder, and more.",
+      "JSON formatting, JWT decoding, Base64 encoding, SQL beautifying — the stuff you actually use daily.",
+  },
+  {
+    icon: Shield,
+    title: "Privacy first",
+    description:
+      "Everything runs in your browser. Your data never touches our servers. Period.",
+  },
+  {
+    icon: Zap,
+    title: "Instant results",
+    description:
+      "No loading spinners, no API calls. Results appear as you type.",
   },
   {
     icon: Palette,
-    title: "Design Tools",
+    title: "Design tools",
     description:
-      "Color converter, QR code generator, markdown preview, and other design utilities.",
+      "Color converter, QR code generator, markdown preview, and more for design-adjacent work.",
   },
   {
-    icon: Lock,
-    title: "Security Tools",
+    icon: ImageIcon,
+    title: "Image utilities",
     description:
-      "Hash generator, password generator, base64 encoder/decoder for secure operations.",
+      "Resize, compress, crop, convert formats, extract EXIF data — 14 image tools total.",
   },
   {
-    icon: Gauge,
-    title: "Performance",
+    icon: Bot,
+    title: "AI copilot",
     description:
-      "Fast, serverless tools that run instantly without any lag or delay.",
+      "Gemini-powered guidance for image tasks. Suggests optimal settings before you export.",
   },
 ];
 
-const tools = [
-  "Base64 Encoder/Decoder",
-  "Case Converter",
-  "Color Converter",
-  "Hash Generator",
-  "JSON Formatter",
-  "JWT Decoder",
-  "Markdown Preview",
-  "Password Generator",
-  "QR Code Generator",
-  "Regex Tester",
-  "SQL Formatter",
-  "Text Diff",
-  "URL Encoder/Decoder",
-  "UUID Generator",
+const toolsList = [
+  { name: "JSON Formatter", isPro: false },
+  { name: "JWT Decoder", isPro: true },
+  { name: "Base64 Encoder", isPro: false },
+  { name: "Hash Generator", isPro: true },
+  { name: "UUID Generator", isPro: false },
+  { name: "SQL Formatter", isPro: true },
+  { name: "Regex Tester", isPro: true },
+  { name: "URL Encoder", isPro: false },
+  { name: "Markdown Preview", isPro: true },
+  { name: "Text Diff", isPro: true },
+  { name: "Color Converter", isPro: false },
+  { name: "QR Code Generator", isPro: true },
+  { name: "Image Resizer", isPro: false },
+  { name: "Image Compressor", isPro: false },
+  { name: "Background Remover", isPro: true },
+  { name: "Password Generator", isPro: true },
 ];
 
 export default function Home() {
@@ -57,101 +85,96 @@ export default function Home() {
       <PublicNavbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32 lg:py-40">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-transparent opacity-50" />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <div className="mb-8 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2">
+      <section className="relative overflow-hidden py-24 md:py-36">
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          {/* Badge */}
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5">
+            <Zap className="h-3.5 w-3.5 text-amber-400" />
             <span className="text-sm font-medium text-amber-300">
-              ✨ Welcome to Dev Toolbox
+              45 developer tools, all free
             </span>
           </div>
 
-          <h1 className="mb-6 text-5xl font-bold tracking-tight md:text-6xl lg:text-7xl">
-            Essential Developer
-            <span className="block bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
-              Tools in One Place
-            </span>
+          <h1 className="mb-6 text-5xl font-extrabold tracking-tight md:text-6xl lg:text-7xl leading-tight">
+            Every Dev Tool
+            <br />
+            You Actually <span className="text-amber-400">Need</span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-2xl text-xl text-muted-foreground">
-            A comprehensive suite of free, open-source tools for developers.
-            Format JSON, generate hashes, convert colors, test regex, and much
-            more—all in one elegant interface.
+          <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground">
+            Format JSON. Decode JWTs. Generate hashes. Build regex. All in one
+            place, browser-side, zero data leaving your machine.
           </p>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-center sm:gap-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button
-              className="h-12 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-lg hover:from-amber-600 hover:to-yellow-600"
+              className="h-11 px-6 bg-amber-400 text-black font-semibold hover:bg-amber-300"
               asChild
             >
               <Link href="/auth/sign-up">
-                Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button
               variant="outline"
-              className="h-12 border-border text-foreground hover:bg-muted"
+              className="h-11 px-6 border-border text-foreground hover:bg-muted"
               asChild
             >
               <Link href="/features">Explore Tools</Link>
             </Button>
           </div>
+        </div>
+      </section>
 
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 pt-12 border-t border-border">
-            <div>
-              <div className="text-3xl font-bold text-amber-400">14+</div>
-              <div className="text-sm text-muted-foreground">
-                Developer Tools
+      {/* Stats */}
+      <section className="border-y border-border bg-card/30 py-10">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-3xl font-bold text-amber-400">
+                  {stat.value}
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground">
+                  {stat.label}
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-amber-400">100%</div>
-              <div className="text-sm text-muted-foreground">
-                Free & Open Source
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-amber-400">Fast</div>
-              <div className="text-sm text-muted-foreground">
-                Instant Results
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="border-t border-border py-20 md:py-32">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold md:text-5xl mb-4">
-              Why Choose Dev Toolbox?
+      {/* Why Dev Toolbox */}
+      <section className="py-20 md:py-28">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-4">
+              WHY DEV TOOLBOX
+            </p>
+            <h2 className="text-3xl font-bold md:text-4xl mb-3">
+              Built for developers, not marketers
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              We provide everything you need to streamline your development
-              workflow
+            <p className="text-muted-foreground">
+              No tracking. No server uploads. No bloat.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Card
+                <div
                   key={feature.title}
-                  className="border-border bg-card p-6 hover:border-amber-500/30 transition-colors"
+                  className="rounded-xl border border-border bg-card p-6 hover:border-amber-500/30 transition-colors"
                 >
-                  <Icon className="h-8 w-8 text-amber-400 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                    <Icon className="h-5 w-5 text-foreground" />
+                  </div>
+                  <h3 className="mb-2 font-semibold">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -159,22 +182,35 @@ export default function Home() {
       </section>
 
       {/* Tools Grid */}
-      <section className="border-t border-border py-20 md:py-32">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold md:text-5xl mb-4">Our Tools</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              A wide range of tools to help with every aspect of development
+      <section className="border-t border-border py-20 md:py-28">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-400 mb-4">
+              THE FULL SUITE
+            </p>
+            <h2 className="text-3xl font-bold md:text-4xl mb-3">
+              45 tools across 4 categories
+            </h2>
+            <p className="text-muted-foreground">
+              Developer &middot; Text &middot; Utility &middot; Image
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {tools.map((tool) => (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {toolsList.map((tool) => (
               <div
-                key={tool}
-                className="rounded-lg border border-border bg-card/50 p-4 text-center hover:border-amber-500/30 hover:bg-muted transition-all"
+                key={tool.name}
+                className="flex items-center gap-2.5 rounded-lg border border-border bg-card/50 px-4 py-3 hover:border-amber-500/30 hover:bg-card transition-all"
               >
-                <p className="text-sm font-medium">{tool}</p>
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                <span className="text-sm font-medium truncate">
+                  {tool.name}
+                </span>
+                {tool.isPro && (
+                  <span className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    PRO
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -182,21 +218,20 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t border-border py-20 md:py-32">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold md:text-5xl mb-6">
-            Ready to Get Started?
+      <section className="border-t border-border py-20 md:py-28">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold md:text-4xl mb-3">
+            Start using it today. It&apos;s free.
           </h2>
-          <p className="text-muted-foreground mb-8 text-lg">
-            Join thousands of developers who are already using Dev Toolbox to
-            streamline their work.
+          <p className="text-muted-foreground mb-8">
+            No credit card. No sign-up friction. Just open it and go.
           </p>
           <Button
-            className="h-12 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-lg hover:from-amber-600 hover:to-yellow-600"
+            className="h-11 px-6 bg-amber-400 text-black font-semibold hover:bg-amber-300"
             asChild
           >
             <Link href="/auth/sign-up">
-              Sign Up for Free <ArrowRight className="ml-2 h-5 w-5" />
+              Sign Up Free <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
