@@ -2,6 +2,7 @@
 
 import { useTheme } from "@/components/theme-provider";
 import { Bell, Moon, Sun } from "lucide-react";
+import * as React from "react";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -18,7 +19,12 @@ export function Navbar({
   userEmail: string;
 }) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
   const greeting = getGreeting();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   const initials = userName
     .split(" ")
     .map((w) => w[0])
@@ -46,8 +52,12 @@ export function Navbar({
           className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4" />
+          {mounted ? (
+            theme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )
           ) : (
             <Moon className="h-4 w-4" />
           )}

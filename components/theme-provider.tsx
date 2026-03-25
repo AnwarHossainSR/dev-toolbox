@@ -49,14 +49,19 @@ export function ThemeProvider({
   enableSystem?: boolean;
   disableTransitionOnChange?: boolean;
 }) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    if (typeof window === "undefined") return defaultTheme;
+  // Always start with defaultTheme so server & client initial render match.
+  // Sync from localStorage after mount to avoid hydration mismatch.
+  const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
+
+  React.useEffect(() => {
     try {
-      return (localStorage.getItem("theme") as Theme) ?? defaultTheme;
-    } catch {
-      return defaultTheme;
-    }
-  });
+      const stored = localStorage.getItem("theme") as Theme | null;
+      if (stored && stored !== theme) {
+        setThemeState(stored);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const resolved = resolveTheme(theme);
 
