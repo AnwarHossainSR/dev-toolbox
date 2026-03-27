@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from "next/navigation";
 import { useId, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -130,8 +131,35 @@ const IMAGE_TOOL_SLUGS = new Set([
   "ai-image-assistant-gemini",
 ]);
 
-const IMAGE_TOOL_CARD_CLASS =
-  "relative overflow-hidden border-sky-200/70 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-sm";
+const IMAGE_TOOL_TABS = [
+  { slug: "image-resizer", label: "Resize" },
+  { slug: "image-cropper", label: "Crop" },
+  { slug: "image-compressor", label: "Compress" },
+  { slug: "image-format-converter", label: "Convert" },
+  { slug: "image-watermark", label: "Watermark" },
+  { slug: "background-remover", label: "Background" },
+  { slug: "image-to-base64", label: "To Base64" },
+  { slug: "color-palette-extractor", label: "Palette" },
+  { slug: "exif-metadata-viewer", label: "EXIF" },
+];
+
+const POSITION_GRID = [
+  [
+    { pos: "top-left", x: 0.12, y: 0.1, icon: "↖" },
+    { pos: "top-center", x: 0.5, y: 0.1, icon: "↑" },
+    { pos: "top-right", x: 0.88, y: 0.1, icon: "↗" },
+  ],
+  [
+    { pos: "middle-left", x: 0.12, y: 0.5, icon: "←" },
+    { pos: "center", x: 0.5, y: 0.5, icon: "·" },
+    { pos: "middle-right", x: 0.88, y: 0.5, icon: "→" },
+  ],
+  [
+    { pos: "bottom-left", x: 0.12, y: 0.9, icon: "↙" },
+    { pos: "bottom-center", x: 0.5, y: 0.9, icon: "↓" },
+    { pos: "bottom-right", x: 0.88, y: 0.9, icon: "↘" },
+  ],
+];
 
 function stripExtension(name: string) {
   const idx = name.lastIndexOf(".");
@@ -145,39 +173,27 @@ function ImageToolDesignWrapper({
   slug: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   return (
-    <div className="space-y-5">
-      <div className="relative overflow-hidden rounded-2xl border border-sky-200/60 bg-linear-to-r from-sky-50 via-white to-cyan-50 px-6 py-5 shadow-sm">
-        <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-sky-400/20 blur-3xl" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-cyan-500 text-white shadow">
-            <svg
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="3" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="m21 15-5-5L5 21" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-sky-600">
-              Image Lab
-            </p>
-            <h3 className="text-base font-bold text-slate-900">
-              {slugTitle(slug)}
-            </h3>
-          </div>
-          <div className="ml-auto hidden sm:flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-medium text-sky-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400"></span>
-            Browser-side · Private
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Horizontal tab navigation */}
+      <div className="relative flex items-center overflow-x-auto border-b border-border">
+        {IMAGE_TOOL_TABS.map((tab) => (
+          <button
+            key={tab.slug}
+            onClick={() => router.push(`/dashboard/tools/${tab.slug}`)}
+            className={`relative px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors outline-none ${
+              slug === tab.slug
+                ? "text-amber-500"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab.label}
+            {slug === tab.slug && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-sm" />
+            )}
+          </button>
+        ))}
       </div>
       {children}
     </div>
@@ -218,7 +234,7 @@ function StyledFilePicker({
   return (
     <div className="space-y-1.5">
       {label && (
-        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </label>
       )}
@@ -234,22 +250,24 @@ function StyledFilePicker({
           setDraggingOver(false);
           handleFiles(e.dataTransfer.files);
         }}
-        className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition-all ${
+        className={`flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-all ${
           draggingOver
-            ? "border-sky-400 bg-sky-50 scale-[1.01]"
+            ? "border-amber-400 bg-amber-400/10 scale-[1.01]"
             : selected
-              ? "border-sky-300 bg-sky-50/60"
-              : "border-slate-200 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50"
+              ? "border-amber-400/60 bg-amber-400/5"
+              : "border-border bg-muted/30 hover:border-amber-400/50 hover:bg-amber-400/5"
         }`}
       >
         {selected ? (
           <>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${draggingOver ? "bg-amber-400/20" : "bg-amber-400/15"}`}
+            >
               <svg
                 width="18"
                 height="18"
                 fill="none"
-                stroke="#0284c7"
+                stroke="#f59e0b"
                 strokeWidth="2"
                 viewBox="0 0 24 24"
               >
@@ -257,33 +275,36 @@ function StyledFilePicker({
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-sky-700 line-clamp-1 max-w-50">
+              <p className="text-xs font-semibold text-amber-500 line-clamp-1 max-w-50">
                 {selected}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 Click to replace
               </p>
             </div>
           </>
         ) : (
           <>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
               <svg
                 width="20"
                 height="20"
                 fill="none"
-                stroke="#94a3b8"
+                stroke="currentColor"
                 strokeWidth="1.8"
                 viewBox="0 0 24 24"
+                className="text-muted-foreground"
               >
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-600">
+              <p className="text-xs font-semibold text-foreground">
                 Drop image here
               </p>
-              <p className="text-[10px] text-slate-400">or click to browse</p>
+              <p className="text-[10px] text-muted-foreground">
+                PNG, JPG, WebP, GIF · Max 20MB
+              </p>
             </div>
           </>
         )}
@@ -336,22 +357,22 @@ function GeminiImageAssistant({ slug }: { slug: string }) {
   };
 
   return (
-    <Card className={IMAGE_TOOL_CARD_CLASS}>
+    <Card className="border-border bg-card">
       <div className="p-5 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-sky-700/80">
+            <p className="text-xs uppercase tracking-[0.22em] text-amber-500/80">
               Gemini Copilot
             </p>
-            <h4 className="text-base font-semibold text-slate-900">
+            <h4 className="text-base font-semibold text-foreground">
               AI Image Guidance
             </h4>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Ask Gemini for workflow tips, quality settings, and cleanup
               strategy before exporting.
             </p>
           </div>
-          <div className="rounded-full border border-sky-200 bg-white/90 px-3 py-1 text-xs text-sky-700">
+          <div className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs text-amber-500">
             Beta
           </div>
         </div>
@@ -381,14 +402,14 @@ function GeminiImageAssistant({ slug }: { slug: string }) {
           <Button onClick={askGemini} disabled={loading}>
             {loading ? "Thinking..." : "Ask Gemini"}
           </Button>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Set GEMINI_API_KEY in env to enable.
           </p>
         </div>
         <Textarea
           readOnly
           value={response}
-          className="h-44 bg-white/90 font-mono text-xs"
+          className="h-44 font-mono text-xs"
           placeholder="Gemini suggestions will appear here"
         />
       </div>
@@ -1121,24 +1142,32 @@ function ImagePreviewPanel({
   badge?: string;
 }) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span
-            className={`h-2 w-2 rounded-full ${src ? "bg-green-400" : "bg-slate-300"}`}
+            className={`h-2 w-2 rounded-full ${src ? "bg-amber-400" : "bg-muted-foreground/30"}`}
           />
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {title}
           </p>
         </div>
         {badge && (
-          <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+          <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500">
             {badge}
           </span>
         )}
       </div>
       {src ? (
-        <div className="flex flex-1 items-center justify-center bg-size-[20px_20px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%),linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%)] bg-position-[0_0,10px_10px] p-3">
+        <div
+          className="flex flex-1 items-center justify-center p-3"
+          style={{
+            backgroundImage:
+              "linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%), linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%)",
+            backgroundSize: "20px 20px",
+            backgroundPosition: "0 0, 10px 10px",
+          }}
+        >
           <img
             src={src}
             alt={title}
@@ -1147,21 +1176,22 @@ function ImagePreviewPanel({
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <svg
               width="22"
               height="22"
               fill="none"
-              stroke="#cbd5e1"
+              stroke="currentColor"
               strokeWidth="1.5"
               viewBox="0 0 24 24"
+              className="text-muted-foreground/40"
             >
               <rect x="3" y="3" width="18" height="18" rx="3" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <path d="m21 15-5-5L5 21" />
             </svg>
           </div>
-          <p className="text-sm text-slate-400">{emptyText}</p>
+          <p className="text-sm text-muted-foreground">{emptyText}</p>
         </div>
       )}
     </div>
@@ -1179,8 +1209,8 @@ function ImageToolLayout({
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
       {/* Controls sidebar — scrollable, fixed width on large screens */}
-      <div className="w-full shrink-0 lg:w-90 xl:w-100">
-        <div className="sticky top-4 max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="w-full shrink-0 lg:w-80 xl:w-96">
+        <div className="sticky top-4 max-h-[calc(100vh-120px)] overflow-y-auto rounded-xl border border-border bg-card shadow-sm">
           <div className="space-y-4 p-5">{controls}</div>
         </div>
       </div>
@@ -1210,8 +1240,10 @@ function SliderControl({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-slate-600">{label}</label>
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700">
+        <label className="text-xs font-medium text-muted-foreground">
+          {label}
+        </label>
+        <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-mono text-foreground">
           {display ?? value}
         </span>
       </div>
@@ -1222,7 +1254,7 @@ function SliderControl({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-sky-500"
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-amber-400"
       />
     </div>
   );
@@ -1230,7 +1262,7 @@ function SliderControl({
 
 function ControlLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-500/80 pt-1">
       {children}
     </p>
   );
@@ -1238,9 +1270,25 @@ function ControlLabel({ children }: { children: React.ReactNode }) {
 
 function ImageResizer() {
   const [img, setImg] = useState<ImageState | null>(null);
+  const [mode, setMode] = useState<"pixels" | "percent" | "preset">("pixels");
   const [w, setW] = useState(800);
   const [h, setH] = useState(600);
+  const [percent, setPercent] = useState(100);
+  const [preset, setPreset] = useState("1920x1080");
+  const [lockAspect, setLockAspect] = useState(true);
+  const [format, setFormat] = useState("image/jpeg");
+  const [quality, setQuality] = useState(85);
   const [result, setResult] = useState("");
+  const originalAspect = useRef(1);
+
+  const PRESETS = [
+    "1920x1080",
+    "1280x720",
+    "1080x1080",
+    "800x600",
+    "640x480",
+    "512x512",
+  ];
 
   const onFile = async (f?: File) => {
     if (!f) return;
@@ -1248,11 +1296,37 @@ function ImageResizer() {
     setImg(loaded);
     setW(loaded.width);
     setH(loaded.height);
+    originalAspect.current = loaded.width / loaded.height;
     setResult("");
+  };
+
+  const handleW = (val: number) => {
+    setW(val);
+    if (lockAspect && img) setH(Math.round(val / originalAspect.current));
+  };
+
+  const handleH = (val: number) => {
+    setH(val);
+    if (lockAspect && img) setW(Math.round(val * originalAspect.current));
+  };
+
+  const getOutputDims = () => {
+    if (!img) return { ow: w, oh: h };
+    if (mode === "percent")
+      return {
+        ow: Math.round((img.width * percent) / 100),
+        oh: Math.round((img.height * percent) / 100),
+      };
+    if (mode === "preset") {
+      const [pw, ph] = preset.split("x").map(Number);
+      return { ow: pw, oh: ph };
+    }
+    return { ow: w, oh: h };
   };
 
   const run = async () => {
     if (!img) return;
+    const { ow, oh } = getOutputDims();
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
       const el = new Image();
       el.onload = () => resolve(el);
@@ -1260,47 +1334,176 @@ function ImageResizer() {
       el.src = img.src;
     });
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = ow;
+    canvas.height = oh;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(image, 0, 0, w, h);
-    setResult(canvas.toDataURL("image/png"));
+    ctx.drawImage(image, 0, 0, ow, oh);
+    const q = format !== "image/png" ? quality / 100 : undefined;
+    setResult(canvas.toDataURL(format, q));
   };
+
+  const { ow, oh } = getOutputDims();
 
   return (
     <ImageToolLayout
       controls={
         <>
-          <ControlLabel>Image</ControlLabel>
+          <ControlLabel>Upload Image</ControlLabel>
           <StyledFilePicker label="" onSelect={(files) => onFile(files?.[0])} />
-          <ControlLabel>Dimensions</ControlLabel>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Width (px)</label>
-              <Input
-                type="number"
-                value={w}
-                onChange={(e) => setW(Number(e.target.value || 1))}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Height (px)</label>
-              <Input
-                type="number"
-                value={h}
-                onChange={(e) => setH(Number(e.target.value || 1))}
-                className="h-8 text-sm"
-              />
-            </div>
+          <ControlLabel>Resize Mode</ControlLabel>
+          <div className="flex gap-1.5">
+            {(["pixels", "percent", "preset"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition-colors ${
+                  mode === m
+                    ? "bg-amber-500 text-white shadow-sm"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m === "pixels"
+                  ? "Pixels"
+                  : m === "percent"
+                    ? "Percent"
+                    : "Preset"}
+              </button>
+            ))}
           </div>
-          {img && (
-            <p className="text-[10px] text-slate-400">
-              Original: {img.width} × {img.height}px
-            </p>
+          {mode === "pixels" && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Width (px)
+                  </label>
+                  <Input
+                    type="number"
+                    value={w}
+                    onChange={(e) => handleW(Number(e.target.value || 1))}
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Height (px)
+                  </label>
+                  <Input
+                    type="number"
+                    value={h}
+                    onChange={(e) => handleH(Number(e.target.value || 1))}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => setLockAspect(!lockAspect)}
+                className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                  lockAspect
+                    ? "border-amber-400/50 bg-amber-400/10 text-amber-500"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  {lockAspect ? (
+                    <>
+                      <rect x="5" y="11" width="14" height="11" rx="2" />
+                      <path d="M8 11V7a4 4 0 018 0v4" />
+                    </>
+                  ) : (
+                    <>
+                      <rect x="5" y="11" width="14" height="11" rx="2" />
+                      <path d="M8 11V7a4 4 0 017-3.87" />
+                    </>
+                  )}
+                </svg>
+                {lockAspect ? "Aspect ratio locked" : "Lock aspect ratio"}
+              </button>
+            </>
           )}
-          <Button onClick={run} disabled={!img} className="w-full">
+          {mode === "percent" && (
+            <SliderControl
+              label="Scale"
+              value={percent}
+              min={1}
+              max={300}
+              onChange={setPercent}
+              display={`${percent}%`}
+            />
+          )}
+          {mode === "preset" && (
+            <div className="grid grid-cols-2 gap-1.5">
+              {PRESETS.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPreset(p)}
+                  className={`rounded-lg py-2 text-xs font-medium transition-colors ${
+                    preset === p
+                      ? "bg-amber-500 text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          )}
+          <ControlLabel>Output Settings</ControlLabel>
+          <div className="space-y-1">
+            <label className="text-[10px] text-muted-foreground">Format</label>
+            <select
+              className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+            >
+              <option value="image/jpeg">JPEG — smaller file</option>
+              <option value="image/png">PNG — lossless</option>
+              <option value="image/webp">WEBP — modern, compact</option>
+            </select>
+          </div>
+          {format !== "image/png" && (
+            <SliderControl
+              label="Quality"
+              value={quality}
+              min={10}
+              max={100}
+              onChange={setQuality}
+              display={`${quality}%`}
+            />
+          )}
+          {img && (
+            <>
+              <ControlLabel>File Info</ControlLabel>
+              <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                {[
+                  ["Original", `${img.width} × ${img.height} px`],
+                  ["Output", `${ow} × ${oh} px`],
+                  ["Scale", `${((ow / img.width) * 100).toFixed(0)}%`],
+                ].map(([lbl, val]) => (
+                  <div
+                    key={lbl}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="text-muted-foreground">{lbl}</span>
+                    <span className="font-mono text-foreground">{val}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <Button
+            onClick={run}
+            disabled={!img}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          >
             Generate Preview
           </Button>
           <Button
@@ -1310,7 +1513,7 @@ function ImageResizer() {
             onClick={() =>
               downloadDataUrl(
                 result,
-                `${stripExtension(img?.fileName || "image")}-resized.png`,
+                `${stripExtension(img?.fileName || "image")}-resized.${format.split("/")[1]}`,
               )
             }
           >
@@ -1330,7 +1533,7 @@ function ImageResizer() {
             title="Resized Preview"
             src={result}
             emptyText="Hit Generate Preview to see the result here."
-            badge={result ? `${w}×${h}` : undefined}
+            badge={result ? `${ow}×${oh}` : undefined}
           />
         </>
       }
@@ -1463,7 +1666,9 @@ function ImageCropper() {
           <ControlLabel>Crop Size</ControlLabel>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Width (px)</label>
+              <label className="text-[10px] text-muted-foreground">
+                Width (px)
+              </label>
               <Input
                 type="number"
                 value={cw}
@@ -1472,7 +1677,9 @@ function ImageCropper() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Height (px)</label>
+              <label className="text-[10px] text-muted-foreground">
+                Height (px)
+              </label>
               <Input
                 type="number"
                 value={ch}
@@ -1482,7 +1689,7 @@ function ImageCropper() {
             </div>
           </div>
           {img && (
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-muted-foreground">
               Original: {img.width} × {img.height}px — crops from center
             </p>
           )}
@@ -1561,7 +1768,7 @@ function ImageFormatConverter() {
           />
           <ControlLabel>Output Format</ControlLabel>
           <select
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
             value={format}
             onChange={(e) => setFormat(e.target.value)}
           >
@@ -1680,7 +1887,7 @@ function BackgroundRemover() {
             max={120}
             onChange={setThreshold}
           />
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-muted-foreground">
             Higher tolerance removes more background pixels. Works best on
             solid-color backgrounds.
           </p>
@@ -1723,7 +1930,9 @@ function BackgroundRemover() {
 
 function ImageWatermark() {
   const [img, setImg] = useState<ImageState | null>(null);
-  const [text, setText] = useState("Dev Toolbox");
+  const [type, setType] = useState<"text" | "logo">("text");
+  const [logoImg, setLogoImg] = useState<ImageState | null>(null);
+  const [text, setText] = useState("© Dev Toolbox 2025");
   const [result, setResult] = useState("");
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(42);
@@ -1734,8 +1943,9 @@ function ImageWatermark() {
   const [strokeColor, setStrokeColor] = useState("#000000");
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [rotation, setRotation] = useState(0);
-  const [xPct, setXPct] = useState(0.82);
-  const [yPct, setYPct] = useState(0.88);
+  const [xPct, setXPct] = useState(0.88);
+  const [yPct, setYPct] = useState(0.9);
+  const [tile, setTile] = useState(false);
   const [dragging, setDragging] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
 
@@ -1743,31 +1953,13 @@ function ImageWatermark() {
     const stage = stageRef.current;
     if (!stage) return;
     const rect = stage.getBoundingClientRect();
-    const px = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    const py = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
-    setXPct(px);
-    setYPct(py);
+    setXPct(Math.min(1, Math.max(0, (clientX - rect.left) / rect.width)));
+    setYPct(Math.min(1, Math.max(0, (clientY - rect.top) / rect.height)));
   };
 
-  const presetPosition = (
-    preset:
-      | "top-left"
-      | "top-right"
-      | "center"
-      | "bottom-left"
-      | "bottom-right",
-  ) => {
-    const map: Record<string, [number, number]> = {
-      "top-left": [0.2, 0.16],
-      "top-right": [0.8, 0.16],
-      center: [0.5, 0.5],
-      "bottom-left": [0.2, 0.88],
-      "bottom-right": [0.82, 0.88],
-    };
-    const [px, py] = map[preset];
-    setXPct(px);
-    setYPct(py);
-  };
+  const activePos = POSITION_GRID.flat().find(
+    (p) => Math.abs(p.x - xPct) < 0.05 && Math.abs(p.y - yPct) < 0.05,
+  )?.pos;
 
   const run = async () => {
     if (!img) return;
@@ -1783,21 +1975,50 @@ function ImageWatermark() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0);
-    ctx.save();
-    ctx.font = `${italic ? "italic" : "normal"} ${fontWeight} ${fontSize}px ${fontFamily}`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.translate(canvas.width * xPct, canvas.height * yPct);
-    ctx.rotate((rotation * Math.PI) / 180);
-    if (strokeWidth > 0) {
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = strokeWidth;
-      ctx.strokeText(text, 0, 0);
+
+    if (type === "text") {
+      const drawText = (cx: number, cy: number) => {
+        ctx.save();
+        ctx.font = `${italic ? "italic" : "normal"} ${fontWeight} ${fontSize}px ${fontFamily}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.translate(cx, cy);
+        ctx.rotate((rotation * Math.PI) / 180);
+        if (strokeWidth > 0) {
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = strokeWidth;
+          ctx.strokeText(text, 0, 0);
+        }
+        ctx.fillStyle = color;
+        ctx.globalAlpha = opacity;
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      };
+      if (tile) {
+        const spacing = fontSize * 4;
+        for (let y = spacing / 2; y < canvas.height + spacing; y += spacing)
+          for (let x = spacing / 2; x < canvas.width + spacing; x += spacing)
+            drawText(x, y);
+      } else {
+        drawText(canvas.width * xPct, canvas.height * yPct);
+      }
+    } else if (type === "logo" && logoImg) {
+      const logoEl = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = logoImg.src;
+      });
+      const logoW = Math.round(canvas.width * 0.2);
+      const logoH = Math.round(logoW * (logoEl.height / logoEl.width));
+      const lx = canvas.width * xPct - logoW / 2;
+      const ly = canvas.height * yPct - logoH / 2;
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(logoEl, lx, ly, logoW, logoH);
+      ctx.restore();
     }
-    ctx.fillStyle = color;
-    ctx.globalAlpha = opacity;
-    ctx.fillText(text, 0, 0);
-    ctx.restore();
+
     setResult(canvas.toDataURL("image/png"));
   };
 
@@ -1805,7 +2026,7 @@ function ImageWatermark() {
     <ImageToolLayout
       controls={
         <>
-          <ControlLabel>Image</ControlLabel>
+          <ControlLabel>Upload Image</ControlLabel>
           <StyledFilePicker
             label=""
             onSelect={async (files) => {
@@ -1814,145 +2035,199 @@ function ImageWatermark() {
               setImg(file ? await loadImageFromFile(file) : null);
             }}
           />
-          <ControlLabel>Watermark Text</ControlLabel>
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Your watermark text"
-            className="h-9"
-          />
-          <ControlLabel>Typography</ControlLabel>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Font Family</label>
-              <select
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm"
-                value={fontFamily}
-                onChange={(e) => setFontFamily(e.target.value)}
+          <ControlLabel>Watermark Type</ControlLabel>
+          <div className="flex gap-1.5">
+            {(["text", "logo"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                  type === t
+                    ? "bg-amber-500 text-white shadow-sm"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <option value="Arial">Arial</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Verdana">Verdana</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Times New Roman">Times New Roman</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Weight</label>
-              <select
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm"
-                value={fontWeight}
-                onChange={(e) => setFontWeight(e.target.value)}
-              >
-                <option value="400">Regular</option>
-                <option value="600">Semi Bold</option>
-                <option value="700">Bold</option>
-                <option value="800">Extra Bold</option>
-              </select>
-            </div>
+                {t === "text" ? "Text" : "Logo / Image"}
+              </button>
+            ))}
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs">
+          {type === "text" ? (
+            <>
+              <ControlLabel>Watermark Text</ControlLabel>
+              <Input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="© Your Brand 2025"
+                className="h-9"
+              />
+              <ControlLabel>Typography</ControlLabel>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Font Family
+                  </label>
+                  <select
+                    className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Weight
+                  </label>
+                  <select
+                    className="h-9 w-full rounded-lg border border-border bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    value={fontWeight}
+                    onChange={(e) => setFontWeight(e.target.value)}
+                  >
+                    <option value="400">Regular</option>
+                    <option value="600">Semi Bold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extra Bold</option>
+                  </select>
+                </div>
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={italic}
+                  onChange={(e) => setItalic(e.target.checked)}
+                  className="accent-amber-400"
+                />
+                <span className="text-foreground">Italic</span>
+              </label>
+              <SliderControl
+                label="Font Size"
+                value={fontSize}
+                min={16}
+                max={140}
+                onChange={setFontSize}
+                display={`${fontSize}px`}
+              />
+              <SliderControl
+                label="Opacity"
+                value={opacity}
+                min={0.1}
+                max={1}
+                step={0.05}
+                onChange={setOpacity}
+                display={`${Math.round(opacity * 100)}%`}
+              />
+              <SliderControl
+                label="Rotation"
+                value={rotation}
+                min={-45}
+                max={45}
+                onChange={setRotation}
+                display={`${rotation}°`}
+              />
+              <ControlLabel>Color</ControlLabel>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Text Color
+                  </label>
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-1.5">
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                    />
+                    <span className="font-mono text-xs text-foreground">
+                      {color}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Stroke Color
+                  </label>
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-1.5">
+                    <input
+                      type="color"
+                      value={strokeColor}
+                      onChange={(e) => setStrokeColor(e.target.value)}
+                      className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
+                    />
+                    <span className="font-mono text-xs text-foreground">
+                      {strokeColor}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <SliderControl
+                label="Stroke Width"
+                value={strokeWidth}
+                min={0}
+                max={8}
+                onChange={setStrokeWidth}
+                display={`${strokeWidth}px`}
+              />
+            </>
+          ) : (
+            <>
+              <ControlLabel>Logo Image</ControlLabel>
+              <StyledFilePicker
+                label=""
+                onSelect={async (files) => {
+                  const file = files?.[0];
+                  setLogoImg(file ? await loadImageFromFile(file) : null);
+                }}
+              />
+              <SliderControl
+                label="Opacity"
+                value={opacity}
+                min={0.1}
+                max={1}
+                step={0.05}
+                onChange={setOpacity}
+                display={`${Math.round(opacity * 100)}%`}
+              />
+            </>
+          )}
+          <ControlLabel>Position</ControlLabel>
+          <div className="grid grid-cols-3 gap-1">
+            {POSITION_GRID.flat().map((cell) => (
+              <button
+                key={cell.pos}
+                onClick={() => {
+                  setXPct(cell.x);
+                  setYPct(cell.y);
+                }}
+                title={cell.pos.replace(/-/g, " ")}
+                className={`rounded-lg py-3 text-sm transition-colors ${
+                  activePos === cell.pos
+                    ? "bg-amber-500 text-white"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {cell.icon}
+              </button>
+            ))}
+          </div>
+          <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border px-3 py-2.5 text-xs">
+            <span className="text-foreground">Tile across entire image</span>
             <input
               type="checkbox"
-              checked={italic}
-              onChange={(e) => setItalic(e.target.checked)}
-              className="accent-sky-500"
+              checked={tile}
+              onChange={(e) => setTile(e.target.checked)}
+              className="accent-amber-400 scale-125"
             />
-            <span className="text-slate-600">Italic</span>
           </label>
-          <SliderControl
-            label="Font Size"
-            value={fontSize}
-            min={16}
-            max={140}
-            onChange={setFontSize}
-            display={`${fontSize}px`}
-          />
-          <SliderControl
-            label="Opacity"
-            value={opacity}
-            min={0.1}
-            max={1}
-            step={0.05}
-            onChange={setOpacity}
-            display={`${Math.round(opacity * 100)}%`}
-          />
-          <SliderControl
-            label="Rotation"
-            value={rotation}
-            min={-45}
-            max={45}
-            onChange={setRotation}
-            display={`${rotation}°`}
-          />
-          <SliderControl
-            label="Stroke Width"
-            value={strokeWidth}
-            min={0}
-            max={8}
-            onChange={setStrokeWidth}
-            display={`${strokeWidth}px`}
-          />
-          <ControlLabel>Colors</ControlLabel>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Text Color</label>
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
-                />
-                <span className="font-mono text-xs text-slate-600">
-                  {color}
-                </span>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-slate-500">Stroke Color</label>
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
-                <input
-                  type="color"
-                  value={strokeColor}
-                  onChange={(e) => setStrokeColor(e.target.value)}
-                  className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
-                />
-                <span className="font-mono text-xs text-slate-600">
-                  {strokeColor}
-                </span>
-              </div>
-            </div>
-          </div>
-          <ControlLabel>Quick Position</ControlLabel>
-          <div className="grid grid-cols-3 gap-1.5">
-            {(
-              [
-                "top-left",
-                "center",
-                "top-right",
-                "bottom-left",
-                "",
-                "bottom-right",
-              ] as const
-            ).map((p, i) =>
-              p ? (
-                <Button
-                  key={p}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-7"
-                  onClick={() => presetPosition(p)}
-                >
-                  {p.replace("-", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                </Button>
-              ) : (
-                <div key={i} />
-              ),
-            )}
-          </div>
-          <Button onClick={run} disabled={!img} className="w-full">
-            Generate Export
+          <Button
+            onClick={run}
+            disabled={!img}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          >
+            Generate Watermarked Image
           </Button>
           <Button
             variant="outline"
@@ -1965,7 +2240,7 @@ function ImageWatermark() {
               )
             }
           >
-            &darr; Download Watermarked Image
+            ↓ Download Output
           </Button>
         </>
       }
@@ -1976,24 +2251,30 @@ function ImageWatermark() {
             src={img?.src}
             emptyText="Upload an image to preview watermark."
           />
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-2 w-2 rounded-full ${img?.src ? "bg-sky-400" : "bg-slate-300"}`}
+                  className={`h-2 w-2 rounded-full ${img?.src ? "bg-amber-400" : "bg-muted-foreground/30"}`}
                 />
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Live Placement
                 </p>
               </div>
-              <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-600">
+              <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500">
                 Drag to reposition
               </span>
             </div>
             <div
               ref={stageRef}
-              className="relative flex-1 overflow-hidden bg-size-[20px_20px] bg-[linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%),linear-gradient(45deg,#f1f5f9_25%,transparent_25%,transparent_75%,#f1f5f9_75%)] bg-position-[0_0,10px_10px] cursor-crosshair"
-              style={{ minHeight: "320px" }}
+              className="relative flex-1 overflow-hidden cursor-crosshair"
+              style={{
+                minHeight: "320px",
+                backgroundImage:
+                  "linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%), linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%)",
+                backgroundSize: "20px 20px",
+                backgroundPosition: "0 0, 10px 10px",
+              }}
               onMouseDown={(e) => {
                 setDragging(true);
                 updatePosition(e.clientX, e.clientY);
@@ -2016,7 +2297,7 @@ function ImageWatermark() {
                     style={{
                       left: `${xPct * 100}%`,
                       top: `${yPct * 100}%`,
-                      color,
+                      color: type === "text" ? color : "#f59e0b",
                       opacity,
                       transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
                       fontFamily,
@@ -2030,12 +2311,12 @@ function ImageWatermark() {
                     }}
                     className="pointer-events-none absolute select-none whitespace-nowrap drop-shadow"
                   >
-                    {text || "Watermark"}
+                    {type === "text" ? text || "Watermark" : "[ Logo ]"}
                   </span>
                 </>
               ) : (
-                <div className="flex h-full min-h-80 items-center justify-center text-sm text-slate-400">
-                  Upload an image to place watermark text.
+                <div className="flex h-full min-h-80 items-center justify-center text-sm text-muted-foreground">
+                  Upload an image to place watermark.
                 </div>
               )}
             </div>
@@ -2043,7 +2324,7 @@ function ImageWatermark() {
           <ImagePreviewPanel
             title="Final Watermarked Output"
             src={result}
-            emptyText="Click Generate Export to produce the final watermarked image."
+            emptyText="Click Generate to produce the final watermarked image."
           />
         </>
       }
@@ -2227,7 +2508,7 @@ function ColorPaletteExtractor() {
                 {colors.map((c) => (
                   <button
                     key={c}
-                    className="group rounded-xl border border-slate-200 p-2 text-xs transition hover:border-sky-300 hover:shadow-sm"
+                    className="group rounded-xl border border-border bg-card p-2 text-xs transition hover:border-amber-400/50 hover:shadow-sm"
                     onClick={() => {
                       navigator.clipboard.writeText(c);
                       toast.success(`Copied ${c}`);
@@ -2237,13 +2518,13 @@ function ColorPaletteExtractor() {
                       className="mb-1.5 h-10 rounded-lg shadow-inner"
                       style={{ background: c }}
                     />
-                    <span className="font-mono text-slate-600 group-hover:text-sky-700">
+                    <span className="font-mono text-muted-foreground group-hover:text-amber-500">
                       {c}
                     </span>
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-muted-foreground">
                 Click a swatch to copy its hex code.
               </p>
             </>
@@ -2303,16 +2584,16 @@ function ExifMetadataViewer() {
           {Object.keys(meta).length > 0 && (
             <>
               <ControlLabel>Metadata</ControlLabel>
-              <div className="space-y-1.5 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="space-y-1.5 rounded-xl border border-border bg-muted/30 p-3">
                 {Object.entries(meta).map(([k, v]) => (
                   <div
                     key={k}
                     className="flex items-start justify-between gap-2 text-xs"
                   >
-                    <span className="font-semibold text-slate-500 capitalize">
+                    <span className="font-semibold text-muted-foreground capitalize">
                       {k}
                     </span>
-                    <span className="font-mono text-slate-700 text-right break-all">
+                    <span className="font-mono text-foreground text-right break-all">
                       {v}
                     </span>
                   </div>
@@ -2407,15 +2688,17 @@ function ScreenshotAnnotator() {
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="space-y-1">
-                <label className="text-[10px] text-slate-500">Color</label>
-                <div className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5">
+                <label className="text-[10px] text-muted-foreground">
+                  Color
+                </label>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-1.5">
                   <input
                     type="color"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
                     className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent"
                   />
-                  <span className="font-mono text-xs text-slate-600">
+                  <span className="font-mono text-xs text-foreground">
                     {color}
                   </span>
                 </div>
@@ -2430,7 +2713,7 @@ function ScreenshotAnnotator() {
               display={`${size}px`}
             />
           </div>
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-muted-foreground">
             Draw directly on the canvas below to annotate.
           </p>
           <Button variant="outline" onClick={download} className="w-full">
@@ -2439,10 +2722,10 @@ function ScreenshotAnnotator() {
         </>
       }
       previews={
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
             <span className="h-2 w-2 rounded-full bg-orange-400" />
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Annotation Canvas
             </p>
           </div>
@@ -2451,7 +2734,7 @@ function ScreenshotAnnotator() {
               ref={canvasRef}
               width={900}
               height={450}
-              className="w-full rounded-lg border border-slate-100 bg-white"
+              className="w-full rounded-lg border border-border bg-card"
               onMouseDown={(e) => {
                 setDrawing(true);
                 const canvas = canvasRef.current;
@@ -2517,7 +2800,7 @@ function BatchImageRenamer() {
             onSelect={(files) => setFiles(Array.from(files ?? []))}
           />
           {files.length > 0 && (
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-muted-foreground">
               {files.length} file{files.length !== 1 ? "s" : ""} selected
             </p>
           )}
@@ -2529,21 +2812,23 @@ function BatchImageRenamer() {
               placeholder="Pattern, e.g. image-{n}"
               className="h-9"
             />
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-muted-foreground">
               Use {"{"}n{"}"} as the sequential number placeholder.
             </p>
           </div>
           {mapped.length > 0 && (
             <>
               <ControlLabel>Rename Plan</ControlLabel>
-              <div className="max-h-52 overflow-auto rounded-xl border border-slate-100 bg-slate-50">
+              <div className="max-h-52 overflow-auto rounded-xl border border-border bg-muted/30">
                 {mapped.map((m) => (
                   <div
                     key={m.from}
-                    className="grid grid-cols-2 gap-2 border-b border-slate-100 px-3 py-1.5 text-xs last:border-0"
+                    className="grid grid-cols-2 gap-2 border-b border-border px-3 py-1.5 text-xs last:border-0"
                   >
-                    <span className="truncate text-slate-500">{m.from}</span>
-                    <span className="truncate font-medium text-slate-700">
+                    <span className="truncate text-muted-foreground">
+                      {m.from}
+                    </span>
+                    <span className="truncate font-medium text-foreground">
                       {m.to}
                     </span>
                   </div>
@@ -2561,16 +2846,16 @@ function BatchImageRenamer() {
         </>
       }
       previews={
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2.5">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
             <span
-              className={`h-2 w-2 rounded-full ${files.length ? "bg-green-400" : "bg-slate-300"}`}
+              className={`h-2 w-2 rounded-full ${files.length ? "bg-amber-400" : "bg-muted-foreground/30"}`}
             />
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Image Thumbnails
             </p>
             {files.length > 0 && (
-              <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
+              <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
                 {files.length} files
               </span>
             )}
@@ -2581,41 +2866,42 @@ function BatchImageRenamer() {
                 {files.slice(0, 12).map((f) => (
                   <div
                     key={f.name}
-                    className="group overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2 transition hover:border-sky-200 hover:shadow-sm"
+                    className="group overflow-hidden rounded-xl border border-border bg-card p-2 transition hover:border-amber-400/50 hover:shadow-sm"
                   >
                     <img
                       src={URL.createObjectURL(f)}
                       alt={f.name}
                       className="h-20 w-full rounded-lg object-cover"
                     />
-                    <p className="mt-1.5 truncate text-[10px] font-medium text-slate-500">
+                    <p className="mt-1.5 truncate text-[10px] font-medium text-muted-foreground">
                       {f.name}
                     </p>
                   </div>
                 ))}
                 {files.length > 12 && (
-                  <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+                  <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border text-xs text-muted-foreground">
                     +{files.length - 12} more
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+              <div className="flex h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <svg
                     width="20"
                     height="20"
                     fill="none"
-                    stroke="#cbd5e1"
+                    stroke="currentColor"
                     strokeWidth="1.5"
                     viewBox="0 0 24 24"
+                    className="text-muted-foreground/40"
                   >
                     <rect x="3" y="3" width="18" height="18" rx="3" />
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <path d="m21 15-5-5L5 21" />
                   </svg>
                 </div>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   Upload images to see thumbnails and build a rename plan.
                 </p>
               </div>
@@ -2676,7 +2962,7 @@ function ReminiLogoRemover() {
               setImg(file ? await loadImageFromFile(file) : null);
             }}
           />
-          <p className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+          <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[11px] text-amber-500">
             Use only on images you own or have rights to edit.
           </p>
           <ControlLabel>Settings</ControlLabel>
