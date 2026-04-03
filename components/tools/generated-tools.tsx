@@ -1275,7 +1275,7 @@ function ImageResizer() {
   const [h, setH] = useState(600);
   const [percent, setPercent] = useState(100);
   const [preset, setPreset] = useState("1920x1080");
-  const [lockAspect, setLockAspect] = useState(true);
+  const [lockAspect, setLockAspect] = useState(false);
   const [format, setFormat] = useState("image/jpeg");
   const [quality, setQuality] = useState(85);
   const [result, setResult] = useState("");
@@ -1308,6 +1308,15 @@ function ImageResizer() {
   const handleH = (val: number) => {
     setH(val);
     if (lockAspect && img) setW(Math.round(val * originalAspect.current));
+  };
+
+  const toggleAspectLock = () => {
+    const nextLockAspect = !lockAspect;
+    setLockAspect(nextLockAspect);
+
+    if (nextLockAspect && img) {
+      setH(Math.round(w / originalAspect.current));
+    }
   };
 
   const getOutputDims = () => {
@@ -1398,7 +1407,7 @@ function ImageResizer() {
                 </div>
               </div>
               <button
-                onClick={() => setLockAspect(!lockAspect)}
+                onClick={toggleAspectLock}
                 className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
                   lockAspect
                     ? "border-amber-400/50 bg-amber-400/10 text-amber-500"
@@ -1425,8 +1434,13 @@ function ImageResizer() {
                     </>
                   )}
                 </svg>
-                {lockAspect ? "Aspect ratio locked" : "Lock aspect ratio"}
+                {lockAspect ? "Aspect ratio locked" : "Custom width and height"}
               </button>
+              <p className="text-[10px] text-muted-foreground">
+                {lockAspect
+                  ? "Changing width or height keeps the original image proportion."
+                  : "Width and height can be changed independently for an exact custom size."}
+              </p>
             </>
           )}
           {mode === "percent" && (
