@@ -129,6 +129,7 @@ const IMAGE_TOOL_SLUGS = new Set([
   "batch-image-renamer",
   "remini-logo-remover",
   "ai-image-assistant-gemini",
+  "signature-maker",
 ]);
 
 const IMAGE_TOOL_TABS = [
@@ -141,6 +142,7 @@ const IMAGE_TOOL_TABS = [
   { slug: "image-to-base64", label: "To Base64" },
   { slug: "color-palette-extractor", label: "Palette" },
   { slug: "exif-metadata-viewer", label: "EXIF" },
+  { slug: "signature-maker", label: "Signature" },
 ];
 
 const POSITION_GRID = [
@@ -3034,6 +3036,488 @@ function ReminiLogoRemover() {
   );
 }
 
+function SignatureMaker() {
+  const [mode, setMode] = useState<"draw" | "type">("draw");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  const [penColor, setPenColor] = useState("#1a1a1a");
+  const [strokeWidth, setStrokeWidth] = useState(3);
+  const [typedText, setTypedText] = useState("");
+  const [fontFamily, setFontFamily] = useState("'Brush Script MT', cursive");
+  const [fontSize, setFontSize] = useState(64);
+
+  const [bgTransparent, setBgTransparent] = useState(true);
+  const [bgColor, setBgColor] = useState("#ffffff");
+
+  const [outW, setOutW] = useState(600);
+  const [outH, setOutH] = useState(200);
+  const [lockSize, setLockSize] = useState(false);
+  const [format, setFormat] = useState("image/png");
+  const [quality, setQuality] = useState(90);
+  const [result, setResult] = useState("");
+  const [hasContent, setHasContent] = useState(false);
+
+  const CANVAS_W = 600;
+  const CANVAS_H = 200;
+  const aspectRatio = CANVAS_W / CANVAS_H;
+
+  const FONT_OPTIONS = [
+    { label: "Script  (Brush)", value: "'Brush Script MT', cursive" },
+    { label: "Cursive (Classic)", value: "cursive" },
+    {
+      label: "Italic Serif",
+      value: "italic 'Palatino Linotype', Palatino, Georgia, serif",
+    },
+    { label: "Casual", value: "'Comic Sans MS', 'Chalkboard SE', cursive" },
+  ];
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    setHasContent(false);
+    setResult("");
+  };
+
+  const getCanvasPos = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((clientX - rect.left) / rect.width) * CANVAS_W,
+      y: ((clientY - rect.top) / rect.height) * CANVAS_H,
+    };
+  };
+
+  const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (mode !== "draw") return;
+    isDrawingRef.current = true;
+    const pos = getCanvasPos(e.clientX, e.clientY);
+    lastPosRef.current = pos;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, strokeWidth / 2, 0, Math.PI * 2);
+    ctx.fillStyle = penColor;
+    ctx.fill();
+    setHasContent(true);
+  };
+
+  const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || mode !== "draw") return;
+    const pos = getCanvasPos(e.clientX, e.clientY);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !lastPosRef.current) return;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = penColor;
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastPosRef.current = pos;
+  };
+
+  const stopDrawing = () => {
+    isDrawingRef.current = false;
+    lastPosRef.current = null;
+  };
+
+  const onTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (mode !== "draw") return;
+    const t = e.touches[0];
+    isDrawingRef.current = true;
+    const pos = getCanvasPos(t.clientX, t.clientY);
+    lastPosRef.current = pos;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, strokeWidth / 2, 0, Math.PI * 2);
+    ctx.fillStyle = penColor;
+    ctx.fill();
+    setHasContent(true);
+  };
+
+  const onTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawingRef.current) return;
+    const t = e.touches[0];
+    const pos = getCanvasPos(t.clientX, t.clientY);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !lastPosRef.current) return;
+    ctx.lineWidth = strokeWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = penColor;
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastPosRef.current = pos;
+  };
+
+  const renderTyped = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.font = `${fontSize}px ${fontFamily}`;
+    ctx.fillStyle = penColor;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(typedText, CANVAS_W / 2, CANVAS_H / 2);
+    setHasContent(!!typedText.trim());
+    setResult("");
+  };
+
+  const generate = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const out = document.createElement("canvas");
+    out.width = outW;
+    out.height = outH;
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+    if (!bgTransparent) {
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, outW, outH);
+    }
+    ctx.drawImage(canvas, 0, 0, outW, outH);
+    const q = format !== "image/png" ? quality / 100 : undefined;
+    setResult(out.toDataURL(format, q));
+  };
+
+  return (
+    <ImageToolLayout
+      controls={
+        <>
+          <ControlLabel>Mode</ControlLabel>
+          <div className="flex gap-1.5">
+            {(["draw", "type"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  setMode(m);
+                  setResult("");
+                }}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition-colors ${
+                  mode === m
+                    ? "bg-amber-500 text-white shadow-sm"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m === "draw" ? "✍ Draw" : "Aa Type"}
+              </button>
+            ))}
+          </div>
+
+          {mode === "draw" && (
+            <>
+              <ControlLabel>Pen</ControlLabel>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Color
+                  </label>
+                  <input
+                    type="color"
+                    value={penColor}
+                    onChange={(e) => setPenColor(e.target.value)}
+                    className="h-9 w-full cursor-pointer rounded-lg border border-border bg-card"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground">
+                    Width (px)
+                  </label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={strokeWidth}
+                    onChange={(e) =>
+                      setStrokeWidth(Math.max(1, Number(e.target.value || 1)))
+                    }
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+              <SliderControl
+                label="Stroke width"
+                value={strokeWidth}
+                min={1}
+                max={20}
+                onChange={setStrokeWidth}
+                display={`${strokeWidth}px`}
+              />
+            </>
+          )}
+
+          {mode === "type" && (
+            <>
+              <ControlLabel>Text</ControlLabel>
+              <Input
+                value={typedText}
+                onChange={(e) => setTypedText(e.target.value)}
+                placeholder="Your Name"
+                className="h-9 text-sm"
+              />
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">
+                  Font
+                </label>
+                <select
+                  className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  value={fontFamily}
+                  onChange={(e) => setFontFamily(e.target.value)}
+                >
+                  {FONT_OPTIONS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <SliderControl
+                label="Font size"
+                value={fontSize}
+                min={20}
+                max={120}
+                onChange={setFontSize}
+                display={`${fontSize}px`}
+              />
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground">
+                  Text color
+                </label>
+                <input
+                  type="color"
+                  value={penColor}
+                  onChange={(e) => setPenColor(e.target.value)}
+                  className="h-9 w-full cursor-pointer rounded-lg border border-border bg-card"
+                />
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={renderTyped}
+                disabled={!typedText.trim()}
+              >
+                Render Text → Canvas
+              </Button>
+            </>
+          )}
+
+          <ControlLabel>Background</ControlLabel>
+          <div className="flex gap-1.5">
+            {[
+              { key: true, label: "Transparent" },
+              { key: false, label: "Color" },
+            ].map(({ key, label }) => (
+              <button
+                key={String(key)}
+                onClick={() => setBgTransparent(key)}
+                className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                  bgTransparent === key
+                    ? "bg-amber-500 text-white"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {!bgTransparent && (
+            <div className="space-y-1">
+              <label className="text-[10px] text-muted-foreground">
+                Background color
+              </label>
+              <input
+                type="color"
+                value={bgColor}
+                onChange={(e) => setBgColor(e.target.value)}
+                className="h-9 w-full cursor-pointer rounded-lg border border-border bg-card"
+              />
+            </div>
+          )}
+
+          <ControlLabel>Output Size</ControlLabel>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] text-muted-foreground">
+                Width (px)
+              </label>
+              <Input
+                type="number"
+                value={outW}
+                onChange={(e) => {
+                  const v = Math.max(1, Number(e.target.value || 1));
+                  setOutW(v);
+                  if (lockSize) setOutH(Math.round(v / aspectRatio));
+                }}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-muted-foreground">
+                Height (px)
+              </label>
+              <Input
+                type="number"
+                value={outH}
+                onChange={(e) => {
+                  const v = Math.max(1, Number(e.target.value || 1));
+                  setOutH(v);
+                  if (lockSize) setOutW(Math.round(v * aspectRatio));
+                }}
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => setLockSize(!lockSize)}
+            className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              lockSize
+                ? "border-amber-400/50 bg-amber-400/10 text-amber-500"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <svg
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              {lockSize ? (
+                <>
+                  <rect x="5" y="11" width="14" height="11" rx="2" />
+                  <path d="M8 11V7a4 4 0 018 0v4" />
+                </>
+              ) : (
+                <>
+                  <rect x="5" y="11" width="14" height="11" rx="2" />
+                  <path d="M8 11V7a4 4 0 017-3.87" />
+                </>
+              )}
+            </svg>
+            {lockSize ? "Size ratio locked" : "Custom width & height"}
+          </button>
+
+          <ControlLabel>Export</ControlLabel>
+          <div className="space-y-1">
+            <label className="text-[10px] text-muted-foreground">Format</label>
+            <select
+              className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400"
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+            >
+              <option value="image/png">PNG — transparent support</option>
+              <option value="image/jpeg">JPEG — smaller file</option>
+              <option value="image/webp">WEBP — modern, compact</option>
+            </select>
+          </div>
+          {format !== "image/png" && (
+            <SliderControl
+              label="Quality"
+              value={quality}
+              min={10}
+              max={100}
+              onChange={setQuality}
+              display={`${quality}%`}
+            />
+          )}
+          <Button
+            onClick={generate}
+            disabled={!hasContent}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+          >
+            Generate Signature
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!result}
+            className="w-full"
+            onClick={() =>
+              downloadDataUrl(result, `signature.${format.split("/")[1]}`)
+            }
+          >
+            ↓ Download Signature
+          </Button>
+        </>
+      }
+      previews={
+        <>
+          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {mode === "draw"
+                    ? "Draw your signature"
+                    : "Type your signature"}
+                </p>
+              </div>
+              <button
+                onClick={clearCanvas}
+                className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+            <div
+              className="flex items-center justify-center p-3"
+              style={{
+                backgroundImage:
+                  "linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%), linear-gradient(45deg, hsl(var(--muted)) 25%, transparent 25%, transparent 75%, hsl(var(--muted)) 75%)",
+                backgroundSize: "20px 20px",
+                backgroundPosition: "0 0, 10px 10px",
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                width={CANVAS_W}
+                height={CANVAS_H}
+                className="w-full max-w-2xl rounded-lg"
+                style={{
+                  cursor: mode === "draw" ? "crosshair" : "default",
+                  touchAction: "none",
+                }}
+                onMouseDown={onMouseDown}
+                onMouseMove={onMouseMove}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={stopDrawing}
+              />
+            </div>
+            <p className="px-4 pb-3 text-center text-[10px] text-muted-foreground">
+              {mode === "draw"
+                ? "Draw with mouse or touch · Use Clear to start over"
+                : "Type your name above · Click Render to preview on canvas"}
+            </p>
+          </div>
+          <ImagePreviewPanel
+            title="Generated Signature"
+            src={result}
+            emptyText="Hit Generate Signature to export the result here."
+            badge={result ? `${outW}×${outH}` : undefined}
+          />
+        </>
+      }
+    />
+  );
+}
+
 const TOOL_RENDERERS: Record<string, React.ComponentType> = {
   "json-csv-converter": JsonCsvConverter,
   "cron-expression-builder": CronExpressionBuilder,
@@ -3062,6 +3546,7 @@ const TOOL_RENDERERS: Record<string, React.ComponentType> = {
   "screenshot-annotator": ScreenshotAnnotator,
   "batch-image-renamer": BatchImageRenamer,
   "remini-logo-remover": ReminiLogoRemover,
+  "signature-maker": SignatureMaker,
   "ai-image-assistant-gemini": () => (
     <GeminiImageAssistant slug="ai-image-assistant-gemini" />
   ),

@@ -375,6 +375,15 @@ export const TOOLS: Tool[] = [
     href: "/dashboard/tools/remini-logo-remover",
     isPremium: true,
   },
+  {
+    name: "Signature Maker",
+    category: "image",
+    description:
+      "Draw or type a custom signature, resize, compress, and export",
+    icon: "✍️",
+    href: "/dashboard/tools/signature-maker",
+    isPremium: false,
+  },
 ];
 
 export const TOOL_CATEGORIES = [
@@ -383,4 +392,3 @@ export const TOOL_CATEGORIES = [
   "utility",
   "image",
 ] as const;
-

@@ -33,6 +33,7 @@ const IMAGE_TOOL_SLUGS = new Set([
   "batch-image-renamer",
   "remini-logo-remover",
   "ai-image-assistant-gemini",
+  "signature-maker",
 ]);
 
 const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
@@ -117,4 +118,3 @@ export default async function ToolPage({
     </div>
   );
 }
-
