@@ -2603,36 +2603,31 @@ function ExifMetadataViewer() {
       ],
     };
 
+    const built: ExifSection[] = [fileSection];
+    const allRaw: Record<string, unknown> = { fileInfo: Object.fromEntries(fileSection.rows) };
+
     try {
-      const exifr = (await import("exifr")).default;
-      const exif = await exifr.parse(f, {
-        tiff: true,
-        exif: true,
-        gps: true,
-        iptc: true,
-        xmp: false,
+      const { parse: exifrParse } = await import("exifr");
+      const exif = await exifrParse(f, {
+        tiff: true, exif: true, gps: true, iptc: true, xmp: true,
         mergeOutput: false,
       });
-
-      const allRaw: Record<string, unknown> = { fileInfo: Object.fromEntries(fileSection.rows) };
-      const built: ExifSection[] = [fileSection];
-
-      if (exif?.tiff) {
-        allRaw.tiff = exif.tiff;
+      // ifd0 contains camera/device info (Make, Model, Software, etc.)
+      const ifd0 = exif?.ifd0 ?? exif?.tiff;
+      if (ifd0) {
+        allRaw.ifd0 = ifd0;
         const rows: [string, string][] = [
-          ["Make", exif.tiff.Make],
-          ["Model", exif.tiff.Model],
-          ["Software", exif.tiff.Software],
-          ["Orientation", exif.tiff.Orientation],
-          ["X Resolution", exif.tiff.XResolution],
-          ["Y Resolution", exif.tiff.YResolution],
-          ["Resolution Unit", exif.tiff.ResolutionUnit],
-          ["Artist", exif.tiff.Artist],
-          ["Copyright", exif.tiff.Copyright],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
-        if (rows.length) built.push({ label: "Camera", rows });
+          ["Make", ifd0.Make],
+          ["Model", ifd0.Model],
+          ["Software", ifd0.Software],
+          ["Image Width", ifd0.ImageWidth != null ? `${ifd0.ImageWidth}px` : undefined],
+          ["Image Height", ifd0.ImageHeight != null ? `${ifd0.ImageHeight}px` : undefined],
+          ["Resolution", ifd0.XResolution != null ? `${ifd0.XResolution} × ${ifd0.YResolution} dpi` : undefined],
+          ["Modify Date", ifd0.ModifyDate],
+          ["Artist", ifd0.Artist],
+          ["Copyright", ifd0.Copyright],
+        ].filter(([, v]) => v != null && v !== "").map(([k, v]) => [k, formatExifValue(v)]);
+        if (rows.length) built.push({ label: "Camera & Device", rows });
       }
 
       if (exif?.exif) {
@@ -2640,30 +2635,29 @@ function ExifMetadataViewer() {
         const e = exif.exif;
         const rows: [string, string][] = [
           ["Date/Time Original", e.DateTimeOriginal],
-          ["Date/Time Digitized", e.DateTimeDigitized],
-          ["Exposure Time", e.ExposureTime !== undefined ? `${e.ExposureTime}s` : undefined],
-          ["F-Number", e.FNumber !== undefined ? `f/${e.FNumber}` : undefined],
-          ["ISO", e.ISOSpeedRatings ?? e.ISO],
-          ["Focal Length", e.FocalLength !== undefined ? `${e.FocalLength}mm` : undefined],
-          ["Focal Length (35mm)", e.FocalLengthIn35mmFilm !== undefined ? `${e.FocalLengthIn35mmFilm}mm` : undefined],
+          ["Create Date", e.CreateDate],
+          ["Timezone", e.OffsetTimeOriginal ?? e.OffsetTime],
+          ["Exposure Time", e.ExposureTime != null ? `${e.ExposureTime}s` : undefined],
+          ["F-Number", e.FNumber != null ? `f/${e.FNumber}` : undefined],
+          ["ISO", e.ISO ?? e.ISOSpeedRatings],
+          ["Focal Length", e.FocalLength != null ? `${e.FocalLength}mm` : undefined],
+          ["Focal Length (35mm)", e.FocalLengthIn35mmFormat != null ? `${e.FocalLengthIn35mmFormat}mm` : undefined],
+          ["Shutter Speed", e.ShutterSpeedValue != null ? `${e.ShutterSpeedValue}` : undefined],
+          ["Aperture", e.ApertureValue != null ? `f/${e.ApertureValue}` : undefined],
+          ["Brightness", e.BrightnessValue != null ? `${e.BrightnessValue}` : undefined],
+          ["Exposure Compensation", e.ExposureCompensation != null ? `${e.ExposureCompensation} EV` : undefined],
           ["Exposure Program", e.ExposureProgram],
+          ["Exposure Mode", e.ExposureMode],
           ["Metering Mode", e.MeteringMode],
+          ["Light Source", e.LightSource],
           ["Flash", e.Flash],
           ["White Balance", e.WhiteBalance],
-          ["Exposure Bias", e.ExposureBiasValue !== undefined ? `${e.ExposureBiasValue} EV` : undefined],
-          ["Shutter Speed", e.ShutterSpeedValue],
-          ["Aperture", e.ApertureValue],
-          ["Brightness", e.BrightnessValue],
-          ["Color Space", e.ColorSpace],
-          ["Pixel X Dimension", e.PixelXDimension],
-          ["Pixel Y Dimension", e.PixelYDimension],
-          ["Lens Make", e.LensMake],
-          ["Lens Model", e.LensModel],
           ["Scene Type", e.SceneType],
           ["Scene Capture Type", e.SceneCaptureType],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
+          ["Sensing Method", e.SensingMethod],
+          ["Lens Make", e.LensMake],
+          ["Lens Model", e.LensModel],
+        ].filter(([, v]) => v != null && v !== "").map(([k, v]) => [k, formatExifValue(v)]);
         if (rows.length) built.push({ label: "Capture Settings", rows });
       }
 
@@ -2673,36 +2667,42 @@ function ExifMetadataViewer() {
         const lat = g.latitude ?? g.GPSLatitude;
         const lon = g.longitude ?? g.GPSLongitude;
         const rows: [string, string][] = [
-          ["Latitude", lat !== undefined ? `${Number(lat).toFixed(6)}°` : undefined],
-          ["Longitude", lon !== undefined ? `${Number(lon).toFixed(6)}°` : undefined],
-          ["Altitude", g.GPSAltitude !== undefined ? `${g.GPSAltitude}m` : undefined],
-          ["GPS Speed", g.GPSSpeed !== undefined ? `${g.GPSSpeed} km/h` : undefined],
-          ["GPS Direction", g.GPSImgDirection !== undefined ? `${g.GPSImgDirection}°` : undefined],
+          ["Latitude", lat != null ? `${Number(lat).toFixed(6)}°` : undefined],
+          ["Longitude", lon != null ? `${Number(lon).toFixed(6)}°` : undefined],
+          ["Altitude", g.GPSAltitude != null ? `${g.GPSAltitude}m` : undefined],
+          ["GPS Speed", g.GPSSpeed != null ? `${g.GPSSpeed} km/h` : undefined],
           ["GPS Date", g.GPSDateStamp],
-          ["GPS Time", g.GPSTimeStamp ? formatExifValue(g.GPSTimeStamp) : undefined],
-          ["Maps Link", lat !== undefined && lon !== undefined
+          ["Maps Link", lat != null && lon != null
             ? `https://maps.google.com/?q=${Number(lat).toFixed(6)},${Number(lon).toFixed(6)}`
             : undefined],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
+        ].filter(([, v]) => v != null && v !== "").map(([k, v]) => [k, formatExifValue(v)]);
         if (rows.length) built.push({ label: "GPS Location", rows });
       }
 
       if (exif?.iptc) {
         allRaw.iptc = exif.iptc;
         const rows: [string, string][] = Object.entries(exif.iptc)
-          .filter(([, v]) => v !== undefined && v !== null)
+          .filter(([, v]) => v != null)
           .map(([k, v]) => [k, formatExifValue(v)]);
         if (rows.length) built.push({ label: "IPTC", rows });
       }
 
-      setRawExif(allRaw);
-      setSections(built);
+      // If only file info was found, add a notice
+      if (built.length === 1) {
+        built.push({
+          label: "EXIF Status",
+          rows: [["Status", "No EXIF metadata found in this image. Try a photo taken directly from a camera or smartphone."]],
+        });
+      }
     } catch {
-      setRawExif({ fileInfo: Object.fromEntries(fileSection.rows) });
-      setSections([fileSection]);
+      built.push({
+        label: "EXIF Status",
+        rows: [["Status", "Could not parse EXIF data from this file."]],
+      });
     }
+
+    setRawExif(allRaw);
+    setSections(built);
   };
 
   return (
