@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { ExportPdfButton } from "@/components/tools/export-pdf-button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -2586,6 +2587,8 @@ function ExifMetadataViewer() {
     URL.revokeObjectURL(url);
   };
 
+
+
   const onFile = async (files: FileList | null) => {
     const f = files?.[0];
     if (!f) return;
@@ -2603,106 +2606,75 @@ function ExifMetadataViewer() {
       ],
     };
 
+    const built: ExifSection[] = [fileSection];
+    const allRaw: Record<string, unknown> = { fileInfo: Object.fromEntries(fileSection.rows) };
+
     try {
-      const exifr = (await import("exifr")).default;
-      const exif = await exifr.parse(f, {
-        tiff: true,
-        exif: true,
-        gps: true,
-        iptc: true,
-        xmp: false,
-        mergeOutput: false,
+      const EXIF = (await import("exif-js")).default;
+      await new Promise<void>((resolve) => {
+        EXIF.getData(f as any, function(this: any) {
+          const all = EXIF.getAllTags(this) as Record<string, unknown>;
+          if (!all || Object.keys(all).length === 0) { resolve(); return; }
+          allRaw.exif = all;
+          const fv = (v: unknown): string => {
+            if (v == null) return "";
+            if (v instanceof Date) return v.toLocaleString();
+            if (Array.isArray(v)) return v.map(String).join(", ");
+            return String(v);
+          };
+          const camRows: [string, string][] = [
+            ["Make", all.Make], ["Model", all.Model], ["Software", all.Software],
+            ["Image Width", all.PixelXDimension != null ? all.PixelXDimension + "px" : null],
+            ["Image Height", all.PixelYDimension != null ? all.PixelYDimension + "px" : null],
+            ["Orientation", all.Orientation], ["Artist", all.Artist], ["Copyright", all.Copyright],
+          ].filter(([, v]) => v != null && v !== "") as [string, string][];
+          if (camRows.length) built.push({ label: "Camera & Device", rows: camRows.map(([k, v]) => [k, fv(v)]) });
+
+          const capRows: [string, string][] = [
+            ["Date/Time Original", all.DateTimeOriginal], ["Date/Time", all.DateTime],
+            ["Exposure Time", all.ExposureTime != null ? all.ExposureTime + "s" : null],
+            ["F-Number", all.FNumber != null ? "f/" + all.FNumber : null],
+            ["ISO", all.ISOSpeedRatings],
+            ["Focal Length", all.FocalLength != null ? all.FocalLength + "mm" : null],
+            ["Focal Length (35mm)", all.FocalLengthIn35mmFilm != null ? all.FocalLengthIn35mmFilm + "mm" : null],
+            ["Shutter Speed", all.ShutterSpeedValue != null ? String(all.ShutterSpeedValue) : null],
+            ["Aperture", all.ApertureValue != null ? "f/" + all.ApertureValue : null],
+            ["Exposure Compensation", all.ExposureCompensation != null ? all.ExposureCompensation + " EV" : null],
+            ["Exposure Program", all.ExposureProgram], ["Metering Mode", all.MeteringMode],
+            ["Flash", all.Flash], ["White Balance", all.WhiteBalance],
+            ["Scene Capture Type", all.SceneCaptureType],
+            ["Lens Make", all.LensMake], ["Lens Model", all.LensModel],
+          ].filter(([, v]) => v != null && v !== "") as [string, string][];
+          if (capRows.length) built.push({ label: "Capture Settings", rows: capRows.map(([k, v]) => [k, fv(v)]) });
+
+          const lat = EXIF.getTag(this, "GPSLatitude") as number[] | undefined;
+          const latRef = EXIF.getTag(this, "GPSLatitudeRef") as string | undefined;
+          const lon = EXIF.getTag(this, "GPSLongitude") as number[] | undefined;
+          const lonRef = EXIF.getTag(this, "GPSLongitudeRef") as string | undefined;
+          if (lat && lon) {
+            const toDec = (dms: number[], ref: string) => {
+              const d = (dms[0] || 0) + (dms[1] || 0) / 60 + (dms[2] || 0) / 3600;
+              return (ref === "S" || ref === "W") ? -d : d;
+            };
+            const latD = toDec(lat, latRef ?? "N");
+            const lonD = toDec(lon, lonRef ?? "E");
+            built.push({ label: "GPS Location", rows: [
+              ["Latitude", latD.toFixed(6) + " deg"],
+              ["Longitude", lonD.toFixed(6) + " deg"],
+              ...(all.GPSAltitude != null ? [["Altitude", all.GPSAltitude + "m"] as [string,string]] : []),
+              ["Maps Link", "https://maps.google.com/?q=" + latD.toFixed(6) + "," + lonD.toFixed(6)],
+            ]});
+          }
+          resolve();
+        });
       });
-
-      const allRaw: Record<string, unknown> = { fileInfo: Object.fromEntries(fileSection.rows) };
-      const built: ExifSection[] = [fileSection];
-
-      if (exif?.tiff) {
-        allRaw.tiff = exif.tiff;
-        const rows: [string, string][] = [
-          ["Make", exif.tiff.Make],
-          ["Model", exif.tiff.Model],
-          ["Software", exif.tiff.Software],
-          ["Orientation", exif.tiff.Orientation],
-          ["X Resolution", exif.tiff.XResolution],
-          ["Y Resolution", exif.tiff.YResolution],
-          ["Resolution Unit", exif.tiff.ResolutionUnit],
-          ["Artist", exif.tiff.Artist],
-          ["Copyright", exif.tiff.Copyright],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
-        if (rows.length) built.push({ label: "Camera", rows });
-      }
-
-      if (exif?.exif) {
-        allRaw.exif = exif.exif;
-        const e = exif.exif;
-        const rows: [string, string][] = [
-          ["Date/Time Original", e.DateTimeOriginal],
-          ["Date/Time Digitized", e.DateTimeDigitized],
-          ["Exposure Time", e.ExposureTime !== undefined ? `${e.ExposureTime}s` : undefined],
-          ["F-Number", e.FNumber !== undefined ? `f/${e.FNumber}` : undefined],
-          ["ISO", e.ISOSpeedRatings ?? e.ISO],
-          ["Focal Length", e.FocalLength !== undefined ? `${e.FocalLength}mm` : undefined],
-          ["Focal Length (35mm)", e.FocalLengthIn35mmFilm !== undefined ? `${e.FocalLengthIn35mmFilm}mm` : undefined],
-          ["Exposure Program", e.ExposureProgram],
-          ["Metering Mode", e.MeteringMode],
-          ["Flash", e.Flash],
-          ["White Balance", e.WhiteBalance],
-          ["Exposure Bias", e.ExposureBiasValue !== undefined ? `${e.ExposureBiasValue} EV` : undefined],
-          ["Shutter Speed", e.ShutterSpeedValue],
-          ["Aperture", e.ApertureValue],
-          ["Brightness", e.BrightnessValue],
-          ["Color Space", e.ColorSpace],
-          ["Pixel X Dimension", e.PixelXDimension],
-          ["Pixel Y Dimension", e.PixelYDimension],
-          ["Lens Make", e.LensMake],
-          ["Lens Model", e.LensModel],
-          ["Scene Type", e.SceneType],
-          ["Scene Capture Type", e.SceneCaptureType],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
-        if (rows.length) built.push({ label: "Capture Settings", rows });
-      }
-
-      if (exif?.gps) {
-        allRaw.gps = exif.gps;
-        const g = exif.gps;
-        const lat = g.latitude ?? g.GPSLatitude;
-        const lon = g.longitude ?? g.GPSLongitude;
-        const rows: [string, string][] = [
-          ["Latitude", lat !== undefined ? `${Number(lat).toFixed(6)}°` : undefined],
-          ["Longitude", lon !== undefined ? `${Number(lon).toFixed(6)}°` : undefined],
-          ["Altitude", g.GPSAltitude !== undefined ? `${g.GPSAltitude}m` : undefined],
-          ["GPS Speed", g.GPSSpeed !== undefined ? `${g.GPSSpeed} km/h` : undefined],
-          ["GPS Direction", g.GPSImgDirection !== undefined ? `${g.GPSImgDirection}°` : undefined],
-          ["GPS Date", g.GPSDateStamp],
-          ["GPS Time", g.GPSTimeStamp ? formatExifValue(g.GPSTimeStamp) : undefined],
-          ["Maps Link", lat !== undefined && lon !== undefined
-            ? `https://maps.google.com/?q=${Number(lat).toFixed(6)},${Number(lon).toFixed(6)}`
-            : undefined],
-        ]
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
-        if (rows.length) built.push({ label: "GPS Location", rows });
-      }
-
-      if (exif?.iptc) {
-        allRaw.iptc = exif.iptc;
-        const rows: [string, string][] = Object.entries(exif.iptc)
-          .filter(([, v]) => v !== undefined && v !== null)
-          .map(([k, v]) => [k, formatExifValue(v)]);
-        if (rows.length) built.push({ label: "IPTC", rows });
-      }
-
-      setRawExif(allRaw);
-      setSections(built);
+      if (built.length === 1) built.push({ label: "EXIF Status", rows: [["Status", "No EXIF metadata found. Try a photo taken directly from a camera or smartphone."]] });
     } catch {
-      setRawExif({ fileInfo: Object.fromEntries(fileSection.rows) });
-      setSections([fileSection]);
+      built.push({ label: "EXIF Status", rows: [["Status", "Could not parse EXIF data from this file."]] });
     }
+
+    setRawExif(allRaw);
+    setSections(built);
   };
 
   return (
@@ -2743,6 +2715,13 @@ function ExifMetadataViewer() {
           >
             &darr; Download Metadata JSON
           </Button>
+          <ExportPdfButton
+            sections={sections}
+            imgSrc={imgSrc || undefined}
+            fileName="image-metadata.pdf"
+            title="Image Metadata Report"
+            disabled={!imgSrc}
+          />
         </>
       }
       previews={
