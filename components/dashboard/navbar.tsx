@@ -1,7 +1,8 @@
 "use client";
 
+import { useSidebar } from "@/components/dashboard/sidebar-context";
 import { useTheme } from "@/components/theme-provider";
-import { Bell, Moon, Search, Sun } from "lucide-react";
+import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import * as React from "react";
 
 function getGreeting() {
@@ -19,6 +20,7 @@ export function Navbar({
   userEmail: string;
 }) {
   const { theme, setTheme } = useTheme();
+  const { toggleMobile } = useSidebar();
   const [mounted, setMounted] = React.useState(false);
   const greeting = getGreeting();
 
@@ -40,7 +42,15 @@ export function Navbar({
     .slice(0, 2);
 
   return (
-    <header className="h-16 shrink-0 border-b border-border bg-background flex items-center justify-between px-6 gap-4">
+    <header className="h-16 shrink-0 border-b border-border bg-background flex items-center justify-between px-4 gap-4">
+      {/* Mobile menu toggle */}
+      <button
+        onClick={toggleMobile}
+        className="lg:hidden flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0"
+        aria-label="Toggle menu"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
       {/* Left: Greeting */}
       <div className="min-w-0">
         <h2 className="text-base font-semibold text-foreground leading-tight truncate">

@@ -2,6 +2,7 @@ import { Base64Encoder } from "@/components/tools/base64-encoder";
 import { CaseConverter } from "@/components/tools/case-converter";
 import { ColorConverter } from "@/components/tools/color-converter";
 import { FavoriteButton } from "@/components/tools/favorite-button";
+import { FullscreenToolWrapper } from "@/components/tools/fullscreen-tool-wrapper";
 import { GeneratedTools } from "@/components/tools/generated-tools";
 import { JsonFormatter } from "@/components/tools/json-formatter";
 import { JwtDecoder } from "@/components/tools/jwt-decoder";
@@ -105,15 +106,17 @@ export default async function ToolPage({
       </div>
 
       <div className="max-w-7xl">
-        {tool.isPremium ? (
-          <PremiumGate>
-            {Component ? <Component /> : <GeneratedTools slug={slug} />}
-          </PremiumGate>
-        ) : Component ? (
-          <Component />
-        ) : (
-          <GeneratedTools slug={slug} />
-        )}
+        <FullscreenToolWrapper>
+          {tool.isPremium ? (
+            <PremiumGate>
+              {Component ? <Component /> : <GeneratedTools slug={slug} />}
+            </PremiumGate>
+          ) : Component ? (
+            <Component />
+          ) : (
+            <GeneratedTools slug={slug} />
+          )}
+        </FullscreenToolWrapper>
       </div>
     </div>
   );
