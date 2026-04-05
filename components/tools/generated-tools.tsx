@@ -2559,12 +2559,23 @@ function ColorPaletteExtractor() {
   );
 }
 
+type ExifSection = { label: string; rows: [string, string][] };
+
+function formatExifValue(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (v instanceof Date) return v.toLocaleString();
+  if (Array.isArray(v)) return v.map((x) => formatExifValue(x)).join(", ");
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
 function ExifMetadataViewer() {
   const [imgSrc, setImgSrc] = useState("");
-  const [meta, setMeta] = useState<Record<string, string>>({});
+  const [sections, setSections] = useState<ExifSection[]>([]);
+  const [rawExif, setRawExif] = useState<Record<string, unknown>>({});
 
   const downloadJson = () => {
-    const blob = new Blob([JSON.stringify(meta, null, 2)], {
+    const blob = new Blob([JSON.stringify(rawExif, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -2575,48 +2586,155 @@ function ExifMetadataViewer() {
     URL.revokeObjectURL(url);
   };
 
+  const onFile = async (files: FileList | null) => {
+    const f = files?.[0];
+    if (!f) return;
+    const loaded = await loadImageFromFile(f);
+    setImgSrc(loaded.src);
+
+    const fileSection: ExifSection = {
+      label: "File Info",
+      rows: [
+        ["File Name", f.name],
+        ["File Type", f.type || "unknown"],
+        ["File Size", `${(f.size / 1024).toFixed(2)} KB`],
+        ["Dimensions", `${loaded.width} × ${loaded.height} px`],
+        ["Last Modified", new Date(f.lastModified).toLocaleString()],
+      ],
+    };
+
+    try {
+      const exifr = (await import("exifr")).default;
+      const exif = await exifr.parse(f, {
+        tiff: true,
+        exif: true,
+        gps: true,
+        iptc: true,
+        xmp: false,
+        mergeOutput: false,
+      });
+
+      const allRaw: Record<string, unknown> = { fileInfo: Object.fromEntries(fileSection.rows) };
+      const built: ExifSection[] = [fileSection];
+
+      if (exif?.tiff) {
+        allRaw.tiff = exif.tiff;
+        const rows: [string, string][] = [
+          ["Make", exif.tiff.Make],
+          ["Model", exif.tiff.Model],
+          ["Software", exif.tiff.Software],
+          ["Orientation", exif.tiff.Orientation],
+          ["X Resolution", exif.tiff.XResolution],
+          ["Y Resolution", exif.tiff.YResolution],
+          ["Resolution Unit", exif.tiff.ResolutionUnit],
+          ["Artist", exif.tiff.Artist],
+          ["Copyright", exif.tiff.Copyright],
+        ]
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, formatExifValue(v)]);
+        if (rows.length) built.push({ label: "Camera", rows });
+      }
+
+      if (exif?.exif) {
+        allRaw.exif = exif.exif;
+        const e = exif.exif;
+        const rows: [string, string][] = [
+          ["Date/Time Original", e.DateTimeOriginal],
+          ["Date/Time Digitized", e.DateTimeDigitized],
+          ["Exposure Time", e.ExposureTime !== undefined ? `${e.ExposureTime}s` : undefined],
+          ["F-Number", e.FNumber !== undefined ? `f/${e.FNumber}` : undefined],
+          ["ISO", e.ISOSpeedRatings ?? e.ISO],
+          ["Focal Length", e.FocalLength !== undefined ? `${e.FocalLength}mm` : undefined],
+          ["Focal Length (35mm)", e.FocalLengthIn35mmFilm !== undefined ? `${e.FocalLengthIn35mmFilm}mm` : undefined],
+          ["Exposure Program", e.ExposureProgram],
+          ["Metering Mode", e.MeteringMode],
+          ["Flash", e.Flash],
+          ["White Balance", e.WhiteBalance],
+          ["Exposure Bias", e.ExposureBiasValue !== undefined ? `${e.ExposureBiasValue} EV` : undefined],
+          ["Shutter Speed", e.ShutterSpeedValue],
+          ["Aperture", e.ApertureValue],
+          ["Brightness", e.BrightnessValue],
+          ["Color Space", e.ColorSpace],
+          ["Pixel X Dimension", e.PixelXDimension],
+          ["Pixel Y Dimension", e.PixelYDimension],
+          ["Lens Make", e.LensMake],
+          ["Lens Model", e.LensModel],
+          ["Scene Type", e.SceneType],
+          ["Scene Capture Type", e.SceneCaptureType],
+        ]
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, formatExifValue(v)]);
+        if (rows.length) built.push({ label: "Capture Settings", rows });
+      }
+
+      if (exif?.gps) {
+        allRaw.gps = exif.gps;
+        const g = exif.gps;
+        const lat = g.latitude ?? g.GPSLatitude;
+        const lon = g.longitude ?? g.GPSLongitude;
+        const rows: [string, string][] = [
+          ["Latitude", lat !== undefined ? `${Number(lat).toFixed(6)}°` : undefined],
+          ["Longitude", lon !== undefined ? `${Number(lon).toFixed(6)}°` : undefined],
+          ["Altitude", g.GPSAltitude !== undefined ? `${g.GPSAltitude}m` : undefined],
+          ["GPS Speed", g.GPSSpeed !== undefined ? `${g.GPSSpeed} km/h` : undefined],
+          ["GPS Direction", g.GPSImgDirection !== undefined ? `${g.GPSImgDirection}°` : undefined],
+          ["GPS Date", g.GPSDateStamp],
+          ["GPS Time", g.GPSTimeStamp ? formatExifValue(g.GPSTimeStamp) : undefined],
+          ["Maps Link", lat !== undefined && lon !== undefined
+            ? `https://maps.google.com/?q=${Number(lat).toFixed(6)},${Number(lon).toFixed(6)}`
+            : undefined],
+        ]
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, formatExifValue(v)]);
+        if (rows.length) built.push({ label: "GPS Location", rows });
+      }
+
+      if (exif?.iptc) {
+        allRaw.iptc = exif.iptc;
+        const rows: [string, string][] = Object.entries(exif.iptc)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => [k, formatExifValue(v)]);
+        if (rows.length) built.push({ label: "IPTC", rows });
+      }
+
+      setRawExif(allRaw);
+      setSections(built);
+    } catch {
+      setRawExif({ fileInfo: Object.fromEntries(fileSection.rows) });
+      setSections([fileSection]);
+    }
+  };
+
   return (
     <ImageToolLayout
       controls={
         <>
           <ControlLabel>Image</ControlLabel>
-          <StyledFilePicker
-            label=""
-            onSelect={async (files) => {
-              const f = files?.[0];
-              if (!f) return;
-              const loaded = await loadImageFromFile(f);
-              setImgSrc(loaded.src);
-              setMeta({
-                fileName: f.name,
-                fileType: f.type || "unknown",
-                fileSize: `${(f.size / 1024).toFixed(2)} KB`,
-                width: String(loaded.width),
-                height: String(loaded.height),
-                lastModified: new Date(f.lastModified).toLocaleString(),
-              });
-            }}
-          />
-          {Object.keys(meta).length > 0 && (
-            <>
-              <ControlLabel>Metadata</ControlLabel>
+          <StyledFilePicker label="" onSelect={onFile} />
+          {sections.map((sec) => (
+            <div key={sec.label}>
+              <ControlLabel>{sec.label}</ControlLabel>
               <div className="space-y-1.5 rounded-xl border border-border bg-muted/30 p-3">
-                {Object.entries(meta).map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="flex items-start justify-between gap-2 text-xs"
-                  >
-                    <span className="font-semibold text-muted-foreground capitalize">
-                      {k}
-                    </span>
-                    <span className="font-mono text-foreground text-right break-all">
-                      {v}
-                    </span>
+                {sec.rows.map(([k, v]) => (
+                  <div key={k} className="flex items-start justify-between gap-2 text-xs">
+                    <span className="font-semibold text-muted-foreground shrink-0">{k}</span>
+                    {k === "Maps Link" ? (
+                      <a
+                        href={v}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-amber-500 underline text-right break-all"
+                      >
+                        Open in Maps
+                      </a>
+                    ) : (
+                      <span className="font-mono text-foreground text-right break-all">{v}</span>
+                    )}
                   </div>
                 ))}
               </div>
-            </>
-          )}
+            </div>
+          ))}
           <Button
             variant="outline"
             onClick={downloadJson}
@@ -2633,9 +2751,7 @@ function ExifMetadataViewer() {
           src={imgSrc}
           emptyText="Upload an image to inspect its metadata."
           badge={
-            meta.width && meta.height
-              ? `${meta.width}×${meta.height}`
-              : undefined
+            sections[0]?.rows.find(([k]) => k === "Dimensions")?.[1]
           }
         />
       }
