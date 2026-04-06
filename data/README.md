@@ -7,11 +7,13 @@ This directory is for **copied** browser Login Data files used by the Login Data
 ### 1. Copy Chrome Login Data
 
 **Windows:**
+
 ```bash
 copy "%LOCALAPPDATA%\Google\Chrome\User Data\Default\Login Data" "data\chrome-login-data\Login Data"
 ```
 
 **macOS/Linux:**
+
 ```bash
 cp ~/Library/Application\ Support/Google/Chrome/Default/Login\ Data data/chrome-login-data/Login\ Data
 ```
@@ -19,13 +21,15 @@ cp ~/Library/Application\ Support/Google/Chrome/Default/Login\ Data data/chrome-
 ### 2. Copy Edge Login Data
 
 **Windows:**
+
 ```bash
-copy "%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Login Data" "data\edge-login-data\Login Data"
+copy "%LOCALAPPDATA%\Microsoft\Edge\User Data\Profile 1\Login Data" "data\edge-login-data\Login Data"
 ```
 
 **macOS/Linux:**
+
 ```bash
-cp ~/Library/Application\ Support/Microsoft\ Edge/Default/Login\ Data data/edge-login-data/Login\ Data
+cp ~/Library/Application\ Support/Microsoft\ Edge/Profile 1/Login\ Data data/edge-login-data/Login\ Data
 ```
 
 ## Important Notes

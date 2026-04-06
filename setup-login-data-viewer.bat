@@ -45,7 +45,7 @@ if exist "%CHROME_SOURCE%" (
 echo.
 
 echo Copying Edge Login Data...
-set EDGE_SOURCE=%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Login Data
+set EDGE_SOURCE=%LOCALAPPDATA%\Microsoft\Edge\User Data\Profile 1\Login Data
 set EDGE_DEST=data\edge-login-data\Login Data
 
 if exist "%EDGE_SOURCE%" (

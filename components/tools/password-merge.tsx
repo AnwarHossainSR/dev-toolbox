@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useId, useState, useEffect } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 
 type PasswordEntry = {
@@ -30,7 +30,6 @@ type FileSlot = { file: File; source: string } | null;
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-// File drop component
 function FileDrop({ 
   label, 
   source, 
@@ -52,8 +51,9 @@ function FileDrop({
   const handle = (file: File | undefined) => {
     if (!file) return;
     const exts = accept.split(",").map(e => e.trim().replace(".", ""));
-    const pattern = new RegExp("\\.(\" + exts.join("|") + \")$\", \"i\");
-    if (!file.name.match(pattern)) {
+    const pattern = `\\.(${exts.join("|")})$`;
+    const regex = new RegExp(pattern, "i");
+    if (!file.name.match(regex)) {
       toast.error(`Only ${fileDesc} files supported`);
       return;
     }
@@ -61,10 +61,10 @@ function FileDrop({
   };
 
   return (
-    <div className=\"space-y-2\">
-      <div className=\"flex items-center gap-2\">
-        <span className=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">{label}</span>
-        <span className=\"rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500\">{source}</span>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+        <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500">{source}</span>
       </div>
       <label
         htmlFor={id}
@@ -179,7 +179,6 @@ export function PasswordMerge() {
         setLoading(false);
       }
     } else {
-      // Local mode
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -211,7 +210,6 @@ export function PasswordMerge() {
 
   return (
     <div className="space-y-6">
-      {/* Mode Tabs (only show in development) */}
       {isDevelopment && (
         <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
           <button
@@ -237,7 +235,6 @@ export function PasswordMerge() {
         </div>
       )}
 
-      {/* Security Notice */}
       <div className="flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-400/5 px-4 py-3">
         <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -255,7 +252,6 @@ export function PasswordMerge() {
 
       {mode === "upload" ? (
         <>
-          {/* Upload Mode UI */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground">Step 1: Upload Password Exports</h3>
@@ -346,7 +342,6 @@ export function PasswordMerge() {
         </>
       ) : (
         <>
-          {/* Local Mode UI */}
           <div className="flex items-start gap-3 rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3">
             <svg width="16" height="16" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
               <circle cx="12" cy="12" r="10" />
@@ -357,7 +352,7 @@ export function PasswordMerge() {
               <ol className="space-y-0.5 text-[11px] list-decimal list-inside">
                 <li>Close Chrome and Edge browsers</li>
                 <li>Copy Login Data files to <code className="px-1 py-0.5 rounded bg-muted">data/chrome-login-data/</code> and <code className="px-1 py-0.5 rounded bg-muted">data/edge-login-data/</code></li>
-                <li>Click "Load & Merge" to process passwords</li>
+                <li>Click Load & Merge to process passwords</li>
               </ol>
             </div>
           </div>
@@ -387,7 +382,6 @@ export function PasswordMerge() {
         </>
       )}
 
-      {/* Merge Button */}
       <Button
         onClick={doMerge}
         disabled={loading || (mode === "upload" && !fileA && !fileB)}
@@ -404,7 +398,6 @@ export function PasswordMerge() {
         ) : mode === "local" ? "🔀 Load & Merge" : "🔀 Merge Passwords"}
       </Button>
 
-      {/* Results */}
       {result && (
         <div className="space-y-4">
           {result.stats.hasTimestamps && (
