@@ -6,6 +6,7 @@ import { FullscreenToolWrapper } from "@/components/tools/fullscreen-tool-wrappe
 import { GeneratedTools } from "@/components/tools/generated-tools";
 import { JsonFormatter } from "@/components/tools/json-formatter";
 import { JwtDecoder } from "@/components/tools/jwt-decoder";
+import { LoginDataViewer } from "@/components/tools/login-data-viewer";
 import { MarkdownPreviewer } from "@/components/tools/markdown-previewer";
 import { PasswordMerge } from "@/components/tools/password-merge";
 import { PremiumGate } from "@/components/tools/premium-gate";
@@ -51,6 +52,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "markdown-previewer": MarkdownPreviewer,
   "unix-timestamp": UnixTimestamp,
   "password-merge": PasswordMerge,
+  "login-data-viewer": LoginDataViewer,
 };
 
 function toSlug(name: string) {

@@ -139,6 +139,14 @@ export const TOOLS: Tool[] = [
     isPremium: false,
   },
   {
+    name: "Login Data Viewer",
+    category: "utility",
+    description: "View & merge Chrome/Edge passwords from copied Login Data files with timestamp-based conflict resolution",
+    icon: "🔓",
+    href: "/dashboard/tools/login-data-viewer",
+    isPremium: false,
+  },
+  {
     name: "Password Merge",
     category: "utility",
     description: "Merge Chrome & Edge exported password files, remove duplicates, highlight conflicts",
