@@ -35,10 +35,9 @@ type MergedResult = {
 };
 
 // ── Chrome epoch → ISO ───────────────────────────────────────────────────────
-// Chrome stores timestamps as microseconds since Jan 1, 1601
 function chromeTimeToISO(chromeTime: number): string {
   if (!chromeTime || chromeTime === 0) return "";
-  const epochDiff = 11644473600000000; // microseconds between 1601 and 1970
+  const epochDiff = 11644473600000000;
   const ms = (chromeTime - epochDiff) / 1000;
   return new Date(ms).toISOString();
 }
@@ -46,30 +45,19 @@ function chromeTimeToISO(chromeTime: number): string {
 // ── Decrypt password (Windows DPAPI) ─────────────────────────────────────────
 function decryptPassword(encryptedPassword: Buffer): string {
   try {
-    // On Windows, use DPAPI via node-dpapi
-    // For now, return placeholder - actual decryption requires node-dpapi package
-    // which needs to be installed: npm install node-dpapi
-    
-    // Check if running on Windows
     if (process.platform !== "win32") {
-      return "[Decryption only supported on Windows]";
+      return "[Windows only]";
     }
 
-    // Try to load node-dpapi dynamically
     try {
-      const dpapi = require("node-dpapi");
-      const decrypted = dpapi.unprotectData(
-        encryptedPassword,
-        null,
-        "CurrentUser"
-      );
+      const dpapi = require("@primno/dpapi");
+      const decrypted = dpapi.unprotectData(encryptedPassword, null, "CurrentUser");
       return decrypted.toString("utf-8");
     } catch (err) {
-      // node-dpapi not installed
-      return "[Install node-dpapi for decryption]";
+      return "[Decryption failed]";
     }
   } catch (err) {
-    return "[Decryption failed]";
+    return "[Error]";
   }
 }
 
@@ -100,11 +88,8 @@ function readLoginData(filePath: string, source: string): LoginEntry[] {
         }>;
 
       for (const row of rows) {
-        const timestamp =
-          row.date_password_modified || row.date_created || 0;
+        const timestamp = row.date_password_modified || row.date_created || 0;
         const lastUpdated = chromeTimeToISO(timestamp);
-
-        // Decrypt password
         const decryptedPassword = decryptPassword(row.password_value);
 
         entries.push({
@@ -135,22 +120,18 @@ function mergeEntries(
   let latestChrome = 0;
   let latestEdge = 0;
 
-  // Add Chrome entries
   for (const entry of chromeEntries) {
     const key = `${entry.url}||${entry.username}`.toLowerCase();
     merged.set(key, entry);
   }
 
-  // Merge Edge entries with conflict detection
   for (const edgeEntry of edgeEntries) {
     const key = `${edgeEntry.url}||${edgeEntry.username}`.toLowerCase();
     const chromeEntry = merged.get(key);
 
     if (!chromeEntry) {
-      // Only in Edge
       merged.set(key, edgeEntry);
     } else if (chromeEntry.password !== edgeEntry.password) {
-      // Conflict: different passwords
       const chromeTime = new Date(chromeEntry.last_updated).getTime();
       const edgeTime = new Date(edgeEntry.last_updated).getTime();
 
@@ -163,7 +144,6 @@ function mergeEntries(
         latestEdge++;
         merged.set(key, edgeEntry);
       } else {
-        // Same timestamp, prefer Edge
         winner = "edge";
         merged.set(key, edgeEntry);
       }
@@ -178,7 +158,6 @@ function mergeEntries(
         winner,
       });
     }
-    // If passwords match, keep Chrome entry (already in map)
   }
 
   const entries = Array.from(merged.values());
@@ -205,12 +184,10 @@ export async function GET(req: NextRequest) {
     const filterUrl = searchParams.get("url") || "";
     const filterUsername = searchParams.get("username") || "";
 
-    // Paths to copied Login Data files
     const projectRoot = process.cwd();
     const chromePath = join(projectRoot, "data", "chrome-login-data", "Login Data");
     const edgePath = join(projectRoot, "data", "edge-login-data", "Login Data");
 
-    // Check if files exist
     const chromeExists = existsSync(chromePath);
     const edgeExists = existsSync(edgePath);
 
@@ -228,15 +205,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Read entries from both browsers
     const chromeEntries = chromeExists ? readLoginData(chromePath, "Chrome") : [];
     const edgeEntries = edgeExists ? readLoginData(edgePath, "Edge") : [];
 
     if (action === "merge") {
-      // Merge with conflict resolution
       const result = mergeEntries(chromeEntries, edgeEntries);
 
-      // Apply filters
       let filtered = result.entries;
       if (filterUrl) {
         filtered = filtered.filter((e) =>
@@ -255,10 +229,8 @@ export async function GET(req: NextRequest) {
         filtered: filtered.length !== result.entries.length,
       });
     } else {
-      // View mode: return all entries separately
       let allEntries = [...chromeEntries, ...edgeEntries];
 
-      // Apply filters
       if (filterUrl) {
         allEntries = allEntries.filter((e) =>
           e.url.toLowerCase().includes(filterUrl.toLowerCase())
