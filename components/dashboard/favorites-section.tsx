@@ -15,6 +15,9 @@ export function FavoritesSection() {
     getFavorites()
       .then(setTools)
       .finally(() => setLoading(false));
+    const handler = () => getFavorites().then(setTools);
+    window.addEventListener('favorites-changed', handler);
+    return () => window.removeEventListener('favorites-changed', handler);
   }, []);
 
   if (loading) {

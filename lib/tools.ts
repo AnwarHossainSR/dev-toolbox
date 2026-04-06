@@ -139,6 +139,14 @@ export const TOOLS: Tool[] = [
     isPremium: false,
   },
   {
+    name: "Password Merge",
+    category: "utility",
+    description: "Merge Chrome & Edge exported password files, remove duplicates, highlight conflicts",
+    icon: "🔀",
+    href: "/dashboard/tools/password-merge",
+    isPremium: false,
+  },
+  {
     name: "Password Generator",
     category: "utility",
     description: "Generate secure random passwords with custom options",

@@ -7,6 +7,7 @@ import { GeneratedTools } from "@/components/tools/generated-tools";
 import { JsonFormatter } from "@/components/tools/json-formatter";
 import { JwtDecoder } from "@/components/tools/jwt-decoder";
 import { MarkdownPreviewer } from "@/components/tools/markdown-previewer";
+import { PasswordMerge } from "@/components/tools/password-merge";
 import { PremiumGate } from "@/components/tools/premium-gate";
 import { RegexTester } from "@/components/tools/regex-tester";
 import { UnixTimestamp } from "@/components/tools/unix-timestamp";
@@ -49,6 +50,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "color-converter": ColorConverter,
   "markdown-previewer": MarkdownPreviewer,
   "unix-timestamp": UnixTimestamp,
+  "password-merge": PasswordMerge,
 };
 
 function toSlug(name: string) {
