@@ -138,14 +138,7 @@ export const TOOLS: Tool[] = [
     href: "/dashboard/unix-timestamp",
     isPremium: false,
   },
-  {
-    name: "Password Merge",
-    category: "utility",
-    description: "Merge Chrome & Edge passwords with timestamp-based conflict resolution. Upload CSV exports or use Local Mode (dev only) to read from copied Login Data files",
-    icon: "🔀",
-    href: "/dashboard/tools/password-merge",
-    isPremium: false,
-  },
+
   {
     name: "Password Generator",
     category: "utility",

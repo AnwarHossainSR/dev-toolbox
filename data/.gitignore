@@ -1,7 +1,0 @@
-# Ignore all Login Data files
-*
-!.gitignore
-!README.md
-
-# These are sensitive browser database files
-# Never commit them to version control
