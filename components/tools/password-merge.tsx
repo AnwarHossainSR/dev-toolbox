@@ -1,48 +1,36 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useId, useState } from "react";
+import { useId, useState, useEffect } from "react";
 import { toast } from "sonner";
 
 type PasswordEntry = {
   url: string;
   username: string;
   password: string;
-  name: string;
+  name?: string;
   source: string;
-};
-
-type ConflictEntry = {
-  url: string;
-  username: string;
-  existing: string;
-  incoming: string;
-  source: string;
+  last_updated?: string;
 };
 
 type MergeResult = {
-  merged: PasswordEntry[];
-  conflicts: ConflictEntry[];
-  duplicates: { url: string; username: string; password: string; name: string }[];
-  onlyInA: PasswordEntry[];
-  onlyInB: PasswordEntry[];
-  inBoth: PasswordEntry[];
+  merged?: PasswordEntry[];
+  entries?: PasswordEntry[];
+  conflicts?: any[];
   stats: {
     total: number;
-    duplicateCount: number;
-    conflicts: number;
-    onlyInA: number;
-    onlyInB: number;
-    inBoth: number;
-    sourceA: string;
-    sourceB: string;
+    chrome?: number;
+    edge?: number;
+    conflicts?: number;
     hasTimestamps?: boolean;
   };
 };
 
 type FileSlot = { file: File; source: string } | null;
 
-// File drop component with flexible file type support
+const isDevelopment = process.env.NODE_ENV === "development";
+
+// File drop component
 function FileDrop({ 
   label, 
   source, 
@@ -64,7 +52,7 @@ function FileDrop({
   const handle = (file: File | undefined) => {
     if (!file) return;
     const exts = accept.split(",").map(e => e.trim().replace(".", ""));
-    const pattern = new RegExp("\.(" + exts.join("|") + ")$", "i");
+    const pattern = new RegExp("\\.(\" + exts.join("|") + \")$\", \"i\");
     if (!file.name.match(pattern)) {
       toast.error(`Only ${fileDesc} files supported`);
       return;
@@ -73,10 +61,10 @@ function FileDrop({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-        <span className="rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500">{source}</span>
+    <div className=\"space-y-2\">
+      <div className=\"flex items-center gap-2\">
+        <span className=\"text-xs font-semibold uppercase tracking-widest text-muted-foreground\">{label}</span>
+        <span className=\"rounded-full bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-500\">{source}</span>
       </div>
       <label
         htmlFor={id}
@@ -98,7 +86,7 @@ function FileDrop({
             </div>
             <div>
               <p className="text-xs font-semibold text-amber-500 truncate max-w-[180px]">{value.file.name}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{(value.file.size / 1024).toFixed(1)} KB · Click to replace</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{(value.file.size / 1024).toFixed(1)} KB</p>
             </div>
           </>
         ) : (
@@ -118,7 +106,7 @@ function FileDrop({
       <input id={id} type="file" accept={accept} className="sr-only" onChange={(e) => handle(e.target.files?.[0])} />
       {value && (
         <button onClick={() => onSelect(null)} className="text-[11px] text-muted-foreground hover:text-red-500 transition-colors">
-          × Remove file
+          × Remove
         </button>
       )}
     </div>
@@ -128,7 +116,7 @@ function FileDrop({
 function toCsv(entries: PasswordEntry[]) {
   const header = "name,url,username,password,source";
   const rows = entries.map((e) =>
-    [e.name, e.url, e.username, e.password, e.source]
+    [e.name || "", e.url, e.username, e.password, e.source]
       .map((v) => `"${String(v).replace(/"/g, '""')}"`)
       .join(",")
   );
@@ -146,55 +134,110 @@ function dl(content: string, filename: string, mime: string) {
 }
 
 export function PasswordMerge() {
+  const [mode, setMode] = useState<"upload" | "local">("upload");
   const [fileA, setFileA] = useState<FileSlot>(null);
   const [fileB, setFileB] = useState<FileSlot>(null);
   const [loginDataA, setLoginDataA] = useState<FileSlot>(null);
   const [loginDataB, setLoginDataB] = useState<FileSlot>(null);
   const [preferNewer, setPreferNewer] = useState<"a" | "b" | "timestamp">("timestamp");
   const [result, setResult] = useState<MergeResult | null>(null);
-  const [merged, setMerged] = useState<PasswordEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
+  const [filterUrl, setFilterUrl] = useState("");
+  const [filterUsername, setFilterUsername] = useState("");
 
   const doMerge = async () => {
-    if (!fileA && !fileB) {
-      toast.error("Upload at least one CSV/JSON file");
-      return;
-    }
-    setLoading(true);
-    try {
-      const form = new FormData();
-      if (fileA) {
-        form.append("fileA", fileA.file);
-        form.append("sourceA", fileA.source);
+    if (mode === "upload") {
+      if (!fileA && !fileB) {
+        toast.error("Upload at least one CSV/JSON file");
+        return;
       }
-      if (fileB) {
-        form.append("fileB", fileB.file);
-        form.append("sourceB", fileB.source);
+      setLoading(true);
+      try {
+        const form = new FormData();
+        if (fileA) {
+          form.append("fileA", fileA.file);
+          form.append("sourceA", fileA.source);
+        }
+        if (fileB) {
+          form.append("fileB", fileB.file);
+          form.append("sourceB", fileB.source);
+        }
+        if (loginDataA) form.append("loginDataA", loginDataA.file);
+        if (loginDataB) form.append("loginDataB", loginDataB.file);
+        form.append("preferNewer", preferNewer);
+
+        const res = await fetch("/api/tools/password-merge", { method: "POST", body: form });
+        const data: MergeResult = await res.json();
+        if (!res.ok) throw new Error((data as any).error || "Merge failed");
+
+        setResult(data);
+        toast.success(`✓ Merged ${data.stats.total} passwords`);
+      } catch (e: unknown) {
+        toast.error(e instanceof Error ? e.message : "Merge failed");
+      } finally {
+        setLoading(false);
       }
-      if (loginDataA) form.append("loginDataA", loginDataA.file);
-      if (loginDataB) form.append("loginDataB", loginDataB.file);
-      form.append("preferNewer", preferNewer);
+    } else {
+      // Local mode
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          action: "merge",
+          url: filterUrl,
+          username: filterUsername,
+        });
 
-      const res = await fetch("/api/tools/password-merge", { method: "POST", body: form });
-      const data: MergeResult = await res.json();
-      if (!res.ok) throw new Error((data as any).error || "Merge failed");
+        const res = await fetch(`/api/tools/login-data-viewer?${params}`);
+        const data = await res.json();
 
-      setResult(data);
-      setMerged(data.merged);
-      toast.success(`✓ Merged ${data.stats.total} passwords`);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Merge failed");
-    } finally {
-      setLoading(false);
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load data");
+        }
+
+        setResult(data);
+        toast.success(`✓ Loaded ${data.stats.total} passwords`);
+      } catch (e: unknown) {
+        const error = e as Error;
+        toast.error(error.message || "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const hasLoginData = loginDataA || loginDataB;
+  const entries = result?.merged || result?.entries || [];
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Security Notice */}
+      {/* Mode Tabs (only show in development) */}
+      {isDevelopment && (
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+          <button
+            onClick={() => setMode("upload")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              mode === "upload"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📤 Upload Mode
+          </button>
+          <button
+            onClick={() => setMode("local")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              mode === "local"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            💻 Local Mode
+          </button>
+        </div>
+      )}
+
+      {/* Security Notice */}
       <div className="flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-400/5 px-4 py-3">
         <svg width="16" height="16" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -203,161 +246,151 @@ export function PasswordMerge() {
           <p className="font-semibold mb-1">🔒 Privacy & Security</p>
           <ul className="space-y-0.5 text-[11px]">
             <li>• All files processed <strong>in memory only</strong> — never saved to disk</li>
-            <li>• Login Data files decrypted using OS APIs (DPAPI on Windows)</li>
+            {mode === "local" && <li>• Reads from copied files in data/ folder — originals untouched</li>}
+            <li>• Login Data files decrypted using DPAPI (Windows)</li>
             <li>• Passwords never logged or retained after response</li>
-            <li>• Temporary SQLite files deleted immediately</li>
           </ul>
         </div>
       </div>
 
-      {/* Step 1: CSV/JSON Exports */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-foreground">Step 1: Upload Password Exports</h3>
-          <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">Required</span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FileDrop label="Chrome CSV/JSON" source="Chrome" value={fileA} onSelect={setFileA} />
-          <FileDrop label="Edge CSV/JSON" source="Edge" value={fileB} onSelect={setFileB} />
-        </div>
-      </div>
+      {mode === "upload" ? (
+        <>
+          {/* Upload Mode UI */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground">Step 1: Upload Password Exports</h3>
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium text-blue-600 dark:text-blue-400">Required</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FileDrop label="Chrome CSV/JSON" source="Chrome" value={fileA} onSelect={setFileA} />
+              <FileDrop label="Edge CSV/JSON" source="Edge" value={fileB} onSelect={setFileB} />
+            </div>
+          </div>
 
-      {/* Step 2: Login Data (Optional) */}
-      <div className="space-y-3">
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground">Step 2: Upload Login Data (Optional)</h3>
               <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-medium text-green-600 dark:text-green-400">Recommended</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              For accurate conflict resolution, upload the <code className="px-1 py-0.5 rounded bg-muted text-[10px]">Login Data</code> SQLite file from each browser.
-              This contains <strong>date_password_modified</strong> timestamps to ensure the latest password is always kept.
-            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FileDrop
+                label="Chrome Login Data"
+                source="Chrome"
+                value={loginDataA}
+                onSelect={setLoginDataA}
+                accept=".db,.sqlite,.sqlite3"
+                fileDesc="SQLite DB"
+              />
+              <FileDrop
+                label="Edge Login Data"
+                source="Edge"
+                value={loginDataB}
+                onSelect={setLoginDataB}
+                accept=".db,.sqlite,.sqlite3"
+                fileDesc="SQLite DB"
+              />
+            </div>
           </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <FileDrop
-              label="Chrome Login Data"
-              source="Chrome"
-              value={loginDataA}
-              onSelect={setLoginDataA}
-              accept=".db,.sqlite,.sqlite3"
-              fileDesc="SQLite DB"
-            />
-            <details className="text-[10px] text-muted-foreground">
-              <summary className="cursor-pointer hover:text-foreground">📁 Where to find Chrome Login Data?</summary>
-              <div className="mt-1 pl-3 space-y-0.5">
-                <p><strong>Windows:</strong></p>
-                <code className="block bg-muted px-2 py-1 rounded text-[9px] break-all">
-                  %LOCALAPPDATA%\Google\Chrome\User Data\Default\Login Data
-                </code>
-                <p className="mt-1"><strong>macOS:</strong></p>
-                <code className="block bg-muted px-2 py-1 rounded text-[9px] break-all">
-                  ~/Library/Application Support/Google/Chrome/Default/Login Data
-                </code>
-                <p className="mt-1 text-amber-600 dark:text-amber-400">⚠️ Close Chrome before copying this file</p>
-              </div>
-            </details>
-          </div>
-          <div className="space-y-2">
-            <FileDrop
-              label="Edge Login Data"
-              source="Edge"
-              value={loginDataB}
-              onSelect={setLoginDataB}
-              accept=".db,.sqlite,.sqlite3"
-              fileDesc="SQLite DB"
-            />
-            <details className="text-[10px] text-muted-foreground">
-              <summary className="cursor-pointer hover:text-foreground">📁 Where to find Edge Login Data?</summary>
-              <div className="mt-1 pl-3 space-y-0.5">
-                <p><strong>Windows:</strong></p>
-                <code className="block bg-muted px-2 py-1 rounded text-[9px] break-all">
-                  %LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Login Data
-                </code>
-                <p className="mt-1"><strong>macOS:</strong></p>
-                <code className="block bg-muted px-2 py-1 rounded text-[9px] break-all">
-                  ~/Library/Application Support/Microsoft Edge/Default/Login Data
-                </code>
-                <p className="mt-1 text-amber-600 dark:text-amber-400">⚠️ Close Edge before copying this file</p>
-              </div>
-            </details>
-          </div>
-        </div>
-      </div>
 
-      {/* Step 3: Conflict Resolution */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <div>
-          <p className="text-sm font-semibold text-foreground">Step 3: Conflict Resolution Strategy</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            When the same site has different passwords, which one should be kept?
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {[
-            {
-              key: "timestamp" as const,
-              label: "Auto (Use Timestamps)",
-              desc: hasLoginData ? "Keep password with latest date_password_modified" : "Requires Login Data files",
-              icon: "⏱️",
-              recommended: true,
-            },
-            {
-              key: "a" as const,
-              label: `Always Keep ${fileA?.source ?? "Chrome"}`,
-              desc: "Chrome password wins all conflicts",
-              icon: "🔵",
-            },
-            {
-              key: "b" as const,
-              label: `Always Keep ${fileB?.source ?? "Edge"}`,
-              desc: "Edge password wins all conflicts",
-              icon: "🟣",
-            },
-          ].map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setPreferNewer(opt.key)}
-              disabled={opt.key === "timestamp" && !hasLoginData}
-              className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all relative ${
-                preferNewer === opt.key
-                  ? "border-amber-400 bg-amber-400/10"
-                  : opt.key === "timestamp" && !hasLoginData
-                  ? "border-border bg-muted/20 opacity-50 cursor-not-allowed"
-                  : "border-border hover:border-amber-400/50 hover:bg-muted/50"
-              }`}
-            >
-              {opt.recommended && hasLoginData && (
-                <span className="absolute -top-2 -right-2 rounded-full bg-green-500 px-2 py-0.5 text-[9px] font-bold text-white shadow-lg">
-                  BEST
-                </span>
-              )}
-              <span className="text-lg shrink-0">{opt.icon}</span>
-              <div className="flex-1">
-                <p className={`text-xs font-semibold ${
-                  preferNewer === opt.key ? "text-amber-500" : "text-foreground"
-                }`}>{opt.label}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
-              </div>
-              {preferNewer === opt.key && (
-                <span className="ml-auto shrink-0 h-4 w-4 rounded-full bg-amber-400 flex items-center justify-center">
-                  <svg width="8" height="8" fill="white" viewBox="0 0 24 24">
-                    <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                  </svg>
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Step 3: Conflict Resolution</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When the same site has different passwords, which one should be kept?
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                {
+                  key: "timestamp" as const,
+                  label: "Auto (Use Timestamps)",
+                  desc: hasLoginData ? "Keep password with latest date_password_modified" : "Requires Login Data files",
+                  icon: "⏱️",
+                },
+                {
+                  key: "a" as const,
+                  label: `Always Keep ${fileA?.source ?? "Chrome"}`,
+                  desc: "Chrome password wins all conflicts",
+                  icon: "🔵",
+                },
+                {
+                  key: "b" as const,
+                  label: `Always Keep ${fileB?.source ?? "Edge"}`,
+                  desc: "Edge password wins all conflicts",
+                  icon: "🟣",
+                },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setPreferNewer(opt.key)}
+                  disabled={opt.key === "timestamp" && !hasLoginData}
+                  className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all ${
+                    preferNewer === opt.key
+                      ? "border-amber-400 bg-amber-400/10"
+                      : opt.key === "timestamp" && !hasLoginData
+                      ? "border-border bg-muted/20 opacity-50 cursor-not-allowed"
+                      : "border-border hover:border-amber-400/50 hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="text-lg shrink-0">{opt.icon}</span>
+                  <div className="flex-1">
+                    <p className={`text-xs font-semibold ${
+                      preferNewer === opt.key ? "text-amber-500" : "text-foreground"
+                    }`}>{opt.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Local Mode UI */}
+          <div className="flex items-start gap-3 rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3">
+            <svg width="16" height="16" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
+            </svg>
+            <div className="text-xs text-blue-700 dark:text-blue-400">
+              <p className="font-semibold mb-1">📁 Local Mode Setup</p>
+              <ol className="space-y-0.5 text-[11px] list-decimal list-inside">
+                <li>Close Chrome and Edge browsers</li>
+                <li>Copy Login Data files to <code className="px-1 py-0.5 rounded bg-muted">data/chrome-login-data/</code> and <code className="px-1 py-0.5 rounded bg-muted">data/edge-login-data/</code></li>
+                <li>Click "Load & Merge" to process passwords</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Filter by URL</label>
+              <input
+                type="text"
+                value={filterUrl}
+                onChange={(e) => setFilterUrl(e.target.value)}
+                placeholder="e.g., google.com"
+                className="w-full h-9 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Filter by Username</label>
+              <input
+                type="text"
+                value={filterUsername}
+                onChange={(e) => setFilterUsername(e.target.value)}
+                placeholder="e.g., user@example.com"
+                className="w-full h-9 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Merge Button */}
       <Button
         onClick={doMerge}
-        disabled={loading || (!fileA && !fileB)}
+        disabled={loading || (mode === "upload" && !fileA && !fileB)}
         className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold"
       >
         {loading ? (
@@ -368,7 +401,7 @@ export function PasswordMerge() {
             </svg>
             Processing...
           </span>
-        ) : "🔀 Merge Passwords"}
+        ) : mode === "local" ? "🔀 Load & Merge" : "🔀 Merge Passwords"}
       </Button>
 
       {/* Results */}
@@ -380,22 +413,22 @@ export function PasswordMerge() {
                 <path d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-xs text-green-700 dark:text-green-400 font-medium">
-                ✓ Timestamp-based resolution active — conflicts resolved using date_password_modified
+                ✓ Timestamp-based resolution active
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total Merged", value: merged.length, icon: "✓", color: "text-foreground" },
-              { label: "Conflicts Resolved", value: result.stats.conflicts, icon: "⚠️", color: "text-amber-500" },
-              { label: "Duplicates Removed", value: result.stats.duplicateCount, icon: "=", color: "text-muted-foreground" },
-              { label: "New Entries", value: result.stats.onlyInA + result.stats.onlyInB, icon: "+", color: "text-green-500" },
+              { label: "Total", value: result.stats.total, icon: "✓" },
+              { label: "Chrome", value: result.stats.chrome || 0, icon: "🔵" },
+              { label: "Edge", value: result.stats.edge || 0, icon: "🟣" },
+              { label: "Conflicts", value: result.stats.conflicts || 0, icon: "⚠️" },
             ].map((s) => (
               <div key={s.label} className="rounded-xl border border-border bg-card p-3 text-center">
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <span className="text-lg">{s.icon}</span>
-                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-2xl font-bold text-foreground">{s.value}</p>
                 </div>
                 <p className="text-[11px] text-muted-foreground">{s.label}</p>
               </div>
@@ -409,11 +442,11 @@ export function PasswordMerge() {
             >
               {showPasswords ? "Hide" : "Show"} passwords
             </button>
-            <Button variant="outline" className="h-9 text-xs" onClick={() => dl(toCsv(merged), "merged-passwords.csv", "text/csv")}>
-              ↓ Download CSV
+            <Button variant="outline" className="h-9 text-xs" onClick={() => dl(toCsv(entries), "merged-passwords.csv", "text/csv")}>
+              ↓ CSV
             </Button>
-            <Button variant="outline" className="h-9 text-xs" onClick={() => dl(JSON.stringify(merged, null, 2), "merged-passwords.json", "application/json")}>
-              ↓ Download JSON
+            <Button variant="outline" className="h-9 text-xs" onClick={() => dl(JSON.stringify(entries, null, 2), "merged-passwords.json", "application/json")}>
+              ↓ JSON
             </Button>
           </div>
 
@@ -421,20 +454,19 @@ export function PasswordMerge() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  {["Name", "URL", "Username", "Password", "Source"].map((h) => (
+                  {["URL", "Username", "Password", "Source"].map((h) => (
                     <th key={h} className="px-3 py-2.5 text-left font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {merged.length === 0 ? (
-                  <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">No entries</td></tr>
+                {entries.length === 0 ? (
+                  <tr><td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">No entries</td></tr>
                 ) : (
-                  merged.map((e, i) => (
+                  entries.map((e, i) => (
                     <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/30">
-                      <td className="px-3 py-2 max-w-[110px] truncate text-foreground">{e.name || "—"}</td>
-                      <td className="px-3 py-2 max-w-[160px] truncate text-muted-foreground">{e.url || "—"}</td>
-                      <td className="px-3 py-2 max-w-[130px] truncate text-foreground">{e.username || "—"}</td>
+                      <td className="px-3 py-2 max-w-[200px] truncate text-foreground">{e.url}</td>
+                      <td className="px-3 py-2 max-w-[150px] truncate text-foreground">{e.username}</td>
                       <td className="px-3 py-2 font-mono text-muted-foreground">
                         {showPasswords ? e.password : "•".repeat(Math.min(e.password.length || 8, 10))}
                       </td>
@@ -448,7 +480,7 @@ export function PasswordMerge() {
             </table>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Showing {merged.length} merged passwords
+            Showing {entries.length} passwords
           </p>
         </div>
       )}

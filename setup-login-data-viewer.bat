@@ -1,17 +1,17 @@
 @echo off
 echo ========================================
-echo Login Data Viewer - Setup Script
+echo Password Merge - Local Mode Setup
 echo ========================================
 echo.
 
-echo Step 1: Installing node-dpapi package...
-call npm install node-dpapi
+echo Step 1: Installing @primno/dpapi package...
+call npm install @primno/dpapi
 if %errorlevel% neq 0 (
-    echo ERROR: Failed to install node-dpapi
+    echo ERROR: Failed to install @primno/dpapi
     pause
     exit /b 1
 )
-echo ✓ node-dpapi installed successfully
+echo ✓ @primno/dpapi installed successfully
 echo.
 
 echo Step 2: Checking data directories...
@@ -67,8 +67,9 @@ echo ========================================
 echo.
 echo Next steps:
 echo 1. Start the dev server: npm run dev
-echo 2. Navigate to: http://localhost:3000/dashboard/tools/login-data-viewer
-echo 3. Click "Load Data" to view your passwords
+echo 2. Navigate to: http://localhost:3000/dashboard/tools/password-merge
+echo 3. Click "Local Mode" tab (only visible in development)
+echo 4. Click "Load & Merge" to view your passwords
 echo.
 echo To update passwords later:
 echo - Close browsers
