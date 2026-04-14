@@ -150,6 +150,14 @@ export const TOOLS: Tool[] = [
 
   // ── Newly requested tools ────────────────────────────────────
   {
+    name: "Stock Market Calculator",
+    category: "utility",
+    description: "Calculate stock trades, revenues, and break-evens",
+    icon: "📈",
+    href: "/dashboard/tools/stock-market-calculator",
+    isPremium: true,
+  },
+  {
     name: "JSON CSV Converter",
     category: "developer",
     description: "Convert JSON to CSV and CSV to JSON instantly",

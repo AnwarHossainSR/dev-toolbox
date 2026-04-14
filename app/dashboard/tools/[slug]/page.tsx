@@ -6,15 +6,14 @@ import { FullscreenToolWrapper } from "@/components/tools/fullscreen-tool-wrappe
 import { GeneratedTools } from "@/components/tools/generated-tools";
 import { JsonFormatter } from "@/components/tools/json-formatter";
 import { JwtDecoder } from "@/components/tools/jwt-decoder";
-import { LoginDataViewer } from "@/components/tools/login-data-viewer";
 import { MarkdownPreviewer } from "@/components/tools/markdown-previewer";
-import { PasswordMerge } from "@/components/tools/password-merge";
 import { PremiumGate } from "@/components/tools/premium-gate";
 import { RegexTester } from "@/components/tools/regex-tester";
 import { UnixTimestamp } from "@/components/tools/unix-timestamp";
 import { UrlEncoder } from "@/components/tools/url-encoder";
 import { UuidGenerator } from "@/components/tools/uuid-generator";
 import { WordCounter } from "@/components/tools/word-counter";
+import { StockMarketCalculator } from "@/components/tools/stock-market-calculator";
 import { getFavorites } from "@/lib/tool-actions";
 import { TOOLS } from "@/lib/tools";
 import { notFound } from "next/navigation";
@@ -51,8 +50,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "color-converter": ColorConverter,
   "markdown-previewer": MarkdownPreviewer,
   "unix-timestamp": UnixTimestamp,
-  "password-merge": PasswordMerge,
-  "login-data-viewer": LoginDataViewer,
+  "stock-market-calculator": StockMarketCalculator,
 };
 
 function toSlug(name: string) {
