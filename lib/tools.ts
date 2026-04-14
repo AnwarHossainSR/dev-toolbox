@@ -138,6 +138,7 @@ export const TOOLS: Tool[] = [
     href: "/dashboard/unix-timestamp",
     isPremium: false,
   },
+
   {
     name: "Password Generator",
     category: "utility",
@@ -148,6 +149,14 @@ export const TOOLS: Tool[] = [
   },
 
   // ── Newly requested tools ────────────────────────────────────
+  {
+    name: "Stock Market Calculator",
+    category: "utility",
+    description: "Calculate stock trades, revenues, and break-evens",
+    icon: "📈",
+    href: "/dashboard/tools/stock-market-calculator",
+    isPremium: true,
+  },
   {
     name: "JSON CSV Converter",
     category: "developer",

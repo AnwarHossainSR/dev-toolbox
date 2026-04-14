@@ -1,10 +1,11 @@
 "use client";
 
+import { getFavorites } from "@/lib/tool-actions";
 import { type Plan } from "@/lib/subscription";
 import { type Tool } from "@/lib/tools";
 import { Crown, Star } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CATEGORIES = [
   "All",
@@ -55,7 +56,14 @@ export function DashboardContent({
   tools: Tool[];
 }) {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
-  const [favorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  useEffect(() => {
+    getFavorites().then(setFavorites);
+    const handler = () => getFavorites().then(setFavorites);
+    window.addEventListener("favorites-changed", handler);
+    return () => window.removeEventListener("favorites-changed", handler);
+  }, []);
 
   const filteredTools = tools.filter((tool) => {
     if (activeCategory === "All") return true;

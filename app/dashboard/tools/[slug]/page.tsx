@@ -13,6 +13,7 @@ import { UnixTimestamp } from "@/components/tools/unix-timestamp";
 import { UrlEncoder } from "@/components/tools/url-encoder";
 import { UuidGenerator } from "@/components/tools/uuid-generator";
 import { WordCounter } from "@/components/tools/word-counter";
+import { StockMarketCalculator } from "@/components/tools/stock-market-calculator";
 import { getFavorites } from "@/lib/tool-actions";
 import { TOOLS } from "@/lib/tools";
 import { notFound } from "next/navigation";
@@ -49,6 +50,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType> = {
   "color-converter": ColorConverter,
   "markdown-previewer": MarkdownPreviewer,
   "unix-timestamp": UnixTimestamp,
+  "stock-market-calculator": StockMarketCalculator,
 };
 
 function toSlug(name: string) {

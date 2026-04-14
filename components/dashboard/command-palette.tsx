@@ -8,7 +8,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { TOOLS } from "@/lib/tools";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -52,6 +53,10 @@ export function CommandPalette() {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden p-0 shadow-lg">
+          <VisuallyHidden>
+            <DialogTitle>Search Tools</DialogTitle>
+            <DialogDescription>Search and navigate to any tool using the command palette.</DialogDescription>
+          </VisuallyHidden>
           <Command>
             <CommandInput placeholder="Search tools... (Ctrl/⌘ + K)" />
             <CommandList className="max-h-75 overflow-y-auto">

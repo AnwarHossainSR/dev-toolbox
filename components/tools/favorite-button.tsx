@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { addFavorite, removeFavorite } from '@/lib/tool-actions';
+import { Heart } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface FavoriteButtonProps {
   toolName: string;
@@ -22,6 +22,8 @@ export function FavoriteButton({ toolName, initialFavorited }: FavoriteButtonPro
         await addFavorite(toolName);
       }
       setIsFavorited(!isFavorited);
+      // Notify dashboard and favorites section to re-fetch
+      window.dispatchEvent(new CustomEvent('favorites-changed'));
     });
   };
 
@@ -33,9 +35,7 @@ export function FavoriteButton({ toolName, initialFavorited }: FavoriteButtonPro
       size="sm"
       aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
     >
-      <Heart
-        className={`h-4 w-4 mr-2 ${isFavorited ? 'fill-current' : ''}`}
-      />
+      <Heart className={`h-4 w-4 mr-2 ${isFavorited ? 'fill-current' : ''}`} />
       {isFavorited ? 'Favorited' : 'Favorite'}
     </Button>
   );
